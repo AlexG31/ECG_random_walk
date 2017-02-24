@@ -10,14 +10,10 @@ import os
 import sys
 import json
 import math
-import logging
 import pdb
 import pywt
 import array
 import matplotlib.pyplot as plt
-
-import WTdenoise.wtdenoise as wtdenoise
-import WTdenoise.wtfeature as wtf
 
 
 
@@ -53,7 +49,6 @@ class ECGfeatures:
 
         self.random_relation_path_ = self.config['random_pattern_path']
         self.fixed_window_length = self.config['fs'] * self.config['winlen_ratio_to_fs']
-        log.info('Fixed window length by ECGconf.json: %d' % self.fixed_window_length)
 
         # Do SWT once for all.
         wt_level = self.config['WT_LEVEL']
@@ -81,13 +76,6 @@ class ECGfeatures:
         if N_data< crop_len:
             rawsig += [rawsig[-1],]*(crop_len-N_data)
         return rawsig
-
-    @staticmethod
-    def signal_preprocessing(rawsig):
-        # wavelet denoise:
-        sig = wtdenoise.denoise(rawsig)
-
-        return sig
 
     def frompos(self,pos):
         '''WT feature Warpper.'''
