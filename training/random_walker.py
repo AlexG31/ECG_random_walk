@@ -5,6 +5,7 @@ import time
 import matplotlib.pyplot as plt
 import pdb
 import bisect
+import joblib
 import numpy as np
 import numpy.random as random
 import random as pyrandom
@@ -18,6 +19,8 @@ class RandomWalker(object):
             random_forest_config = dict()):
         '''This class only focus on a single label.'''
         self.target_label = target_label
+        self.regressor = None
+        self.training_data = list()
         self.random_forest_config = random_forest_config
         if 'max_depth' not in self.random_forest_config:
             self.random_forest_config['max_depth'] = 15
@@ -62,6 +65,50 @@ class RandomWalker(object):
                     'random_pattern.json'),
                 )
         return conf
+
+    def collect_training_data(self, raw_sig, expert_annotations):
+        '''Incrementally collect training samples X and training values y.'''
+        annot_pos_list = [x[0] for x in expert_annotations if x[1] == self.target_label]
+        training_indexes = self.gaussian_training_sampling(annot_pos_list)
+
+        configuration_info = self.get_configuration()
+        feature_extractor = ECGfeatures(raw_sig, configuration_info)
+
+        len_annotations = len(annot_pos_list)
+        for pos in training_indexes:
+            # Find closest target annotation
+            lb = bisect.bisect_left(annot_pos_list, pos)
+            near_pos = -1
+            for si in xrange(lb - 1, lb + 1):
+                if si >= 0 and si < len_annotations:
+                    dist = abs(pos - annot_pos_list[si])
+                    if (near_pos == -1 or
+                            dist < abs(pos - near_pos)):
+                        near_pos = annot_pos_list[si]
+            if near_pos == -1:
+                raise Exception(
+                        'No %s annotations in training sample!' % (
+                            self.target_label,))
+            value = -1 if near_pos < pos else 1
+            feature_vector = feature_extractor.frompos(pos)
+            self.training_data.append((feature_vector, value))
+        
+    def save_model(self, model_file_name):
+        with open(model_file_name, 'w') as fout:
+            joblib.dump(self.regressor, fout, compress = True)
+            print 'Model save as %s.' % model_file_name
+
+    def load_model(self, model_file_name):
+        with open(model_file_name, 'r') as fout:
+            self.regressor = joblib.load(fout)
+
+    def training(self):
+        '''Trianing for samples X and their output values y.'''
+        self.regressor = RandomForestRegressor(30,
+                **self.random_forest_config
+                )
+        X, y = zip(*self.training_data)
+        self.regressor.fit(X, y)
 
     def do_training_on_qt(self, record_name = 'sel103'):
         '''Training test.'''
@@ -139,17 +186,26 @@ class RandomWalker(object):
         '''Increase the probability of left and right directions.'''
         return 1.0 / (1.0 + np.exp(-x)) - 0.5
         
-    def testing_walk(self, raw_signal, seed_position,
+    def GetFeatureExtractor(self, raw_signal):
+        '''Get feature extractor for a given signal.'''
+        if len(raw_signal) == 0:
+            raise Exception('Empty testing signal!')
+        configuration_info = self.get_configuration()
+        feature_extractor = ECGfeatures(raw_signal, configuration_info)
+        return feature_extractor
+
+    def testing_walk_extractor(self, feature_extractor,
+            seed_position,
             iterations =  100,
             stepsize = 4):
         '''
         Start random walk with seed position.
         Input:
             ECG signal.
+        Output:
+            zip(pos_list, results):
+                walk path & predict probability at each position.
         '''
-        configuration_info = self.get_configuration()
-        feature_extractor = ECGfeatures(raw_signal, configuration_info)
-
         results = list()
         pos_list = list()
         pos_dict = dict()
@@ -172,6 +228,62 @@ class RandomWalker(object):
             # threshold = self.sigmod_function(threshold)
             direction = -1.0 if random.ranf() >= threshold else 1.0
             pos += int(direction * stepsize)
+            # Boundary
+            if pos < 0:
+                pos = 0
+            elif pos >= len(feature_extractor.signal_in):
+                pos = len(feature_extractor.signal_in) - 1
+
+        return zip(pos_list, results)
+
+    def testing_walk(self, raw_signal, seed_position,
+            iterations =  100,
+            stepsize = 4):
+        '''
+        Start random walk with seed position.
+        Input:
+            ECG signal.
+        Output:
+            zip(pos_list, results):
+                walk path & predict probability at each position.
+        '''
+        if len(raw_signal) == 0:
+            raise Exception('Empty testing signal!')
+
+        configuration_info = self.get_configuration()
+        start_time = time.time()
+        feature_extractor = ECGfeatures(raw_signal, configuration_info)
+        print 'feature extractor time cost: %f s.' % (time.time() - start_time)
+
+        results = list()
+        pos_list = list()
+        pos_dict = dict()
+
+        pos = seed_position
+        start_time = time.time()
+        for pi in xrange(0, iterations):
+            pos_list.append(pos)
+
+            if pos not in pos_dict:
+                feature_vector = np.array(feature_extractor.frompos(pos))
+                feature_vector = feature_vector.reshape(1, -1)
+                value = self.regressor.predict(feature_vector)
+                pos_dict[pos] = value
+            else:
+                value = pos_dict[pos]
+            results.append(value)
+
+            # Update next position
+            threshold = (value + 1.0) / 2.0
+            # threshold = self.sigmod_function(threshold)
+            direction = -1.0 if random.ranf() >= threshold else 1.0
+            pos += int(direction * stepsize)
+            # Boundary
+            if pos < 0:
+                pos = 0
+            elif pos >= len(raw_signal):
+                pos = len(raw_signal) - 1
+        print 'Iteration time cost: %f s.' % (time.time() - start_time)
 
         return zip(pos_list, results)
 
@@ -266,13 +378,14 @@ def Test2():
 def Test3():
     '''Test case 3: random walk.'''
     qt = QTloader()
-    record_name = 'sel100'
+    record_name = 'sel46'
     sig = qt.load(record_name)
     raw_sig = sig['sig']
 
     random_forest_config = dict(
             max_depth = 10)
-    walker = RandomWalker(random_forest_config = random_forest_config)
+    walker = RandomWalker(target_label = 'P',
+            random_forest_config = random_forest_config)
 
     print 'training...'
     start_time = time.time()
@@ -291,6 +404,7 @@ def Test3():
         print 'testing used %.3f seconds' % (time.time() - start_time)
 
         pos_list, values = zip(*results)
+        predict_pos = np.mean(pos_list[len(pos_list) / 2:])
         
         # amp_list = [raw_sig[int(x)] for x in pos_list]
         amp_list = []
@@ -299,6 +413,11 @@ def Test3():
             amp_list.append(bias)
             bias -= 0.01
 
+        plt.plot(predict_pos,
+                raw_sig[int(predict_pos)],
+                'ro',
+                markersize = 14,
+                label = 'predict position')
         plt.plot(pos_list, amp_list, 'r',
                 label = 'walk path',
                 markersize = 3,
