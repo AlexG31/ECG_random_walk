@@ -42,15 +42,16 @@ def Testing_random_walk(raw_sig, fs, qrs_locations, model_list):
     # For benchmarking
     Tnew_list = list()
     walker_time_cost = 0
+    walker_count = 0
     # Maybe batch walk?
     feature_extractor = None
     for R_pos in qrs_locations:
         for walker, bias in model_list:
             bias = int(float(fs) * bias)
 
-            start_time = time.time()
             if feature_extractor is None:
                 feature_extractor = walker.GetFeatureExtractor(raw_sig)
+            start_time = time.time()
             results = walker.testing_walk_extractor(feature_extractor, R_pos + bias,
                     iterations = 100,
                     stepsize = 10)
@@ -59,6 +60,7 @@ def Testing_random_walk(raw_sig, fs, qrs_locations, model_list):
                     # stepsize = 10)
             # print 'testing time cost: %f s.' % (time.time() - start_time)
             walker_time_cost += time.time() - start_time
+            walker_count += 1
 
             path, probability = zip(*results)
             Tnew_list.append(len(set(path)))
@@ -67,6 +69,7 @@ def Testing_random_walk(raw_sig, fs, qrs_locations, model_list):
                     walker.target_label))
             
     print 'Walker time cost %f seconds.' % walker_time_cost
+    print 'Walker average time cost %f seconds.' % (walker_time_cost / walker_count)
     print 'Average number of new samples to test: %f.' % np.mean(Tnew_list)
     return testing_results
 
@@ -75,14 +78,12 @@ def Testing_random_walk(raw_sig, fs, qrs_locations, model_list):
 def GetModels():
     '''Returns model dict.'''
     label_list = ['P', 'Ponset', 'Poffset',
-            'T',]
-    # label_list = ['P', 'Ponset', 'Poffset',
-            # 'T', 'Toffset',
-            # 'Ronset', 'R', 'Roffset']
+            'T', 'Toffset',
+            'Ronset', 'Roffset']
     bias_list = [
-                -0.19, -0.19, -0.19,
-                0.27, 0.2,
-                -0.02, 0, 0.02,
+                -0.19, -0.195, -0.185,
+                0.26, 0.27,
+                -0.02, 0.02,
             ]
     # Get model dict
     model_folder = '/home/alex/LabGit/ECG_random_walk/training/data/m4_models'
@@ -102,7 +103,7 @@ def Test1():
     qt = QTloader()
     sig = qt.load('sel103')
     raw_sig = sig['sig']
-    raw_sig = raw_sig[0:250 * 120]
+    raw_sig = raw_sig[0:250 * 20]
 
     model_list = GetModels()
     start_time = time.time()

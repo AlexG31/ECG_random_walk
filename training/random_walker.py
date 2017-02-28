@@ -194,14 +194,14 @@ class RandomWalker(object):
         feature_extractor = ECGfeatures(raw_signal, configuration_info)
         return feature_extractor
 
-    def testing_walk_extractor(self, feature_extractor,
+    def testing_walk_extractor_pre(self, feature_extractor,
             seed_position,
             iterations =  100,
             stepsize = 4):
         '''
         Start random walk with seed position.
         Input:
-            ECG signal.
+            ECG signal feature extractor.
         Output:
             zip(pos_list, results):
                 walk path & predict probability at each position.
@@ -209,15 +209,94 @@ class RandomWalker(object):
         results = list()
         pos_list = list()
         pos_dict = dict()
+        # Benchmarking
+        feature_collecting_time_cost = 0
+        predict_time_cost = 0
 
         pos = seed_position
         for pi in xrange(0, iterations):
+            # Boundary
+            if pos < 0:
+                pos = 0
+            elif pos >= len(feature_extractor.signal_in):
+                pos = len(feature_extractor.signal_in) - 1
+
             pos_list.append(pos)
 
             if pos not in pos_dict:
+                feature_mat = list()
+
+                start_time = time.time()
+                predict_poslist = list()
+                for current_pos in xrange(pos - stepsize, pos + stepsize + 1):
+                    # Boundary
+                    if current_pos < 0:
+                        current_pos = 0
+                    elif current_pos >= len(feature_extractor.signal_in):
+                        current_pos = len(feature_extractor.signal_in) - 1
+                    predict_poslist.append(current_pos)
+                    feature_vector = feature_extractor.frompos(current_pos)
+                    feature_mat.append(feature_vector)
+                feature_collecting_time_cost += time.time() - start_time
+
+                start_time = time.time()
+                values = self.regressor.predict(feature_mat)
+                predict_time_cost += time.time() - start_time
+
+                for current_pos, value in zip(predict_poslist, values):
+                    pos_dict[current_pos] = value
+                value = pos_dict[pos]
+            else:
+                value = pos_dict[pos]
+            results.append(value)
+
+            # Update next position
+            threshold = (value + 1.0) / 2.0
+            # threshold = self.sigmod_function(threshold)
+            direction = -1.0 if random.ranf() >= threshold else 1.0
+            pos += int(direction * stepsize)
+
+        # print 'Feature collecting time cost: %f secs.' % feature_collecting_time_cost
+        # print 'Prediction time cost %f seconds.' % predict_time_cost
+        return zip(pos_list, results)
+
+    def testing_walk_extractor(self, feature_extractor,
+            seed_position,
+            iterations =  100,
+            stepsize = 4):
+        '''
+        Start random walk with seed position.
+        Input:
+            ECG signal feature extractor.
+        Output:
+            zip(pos_list, results):
+                walk path & predict probability at each position.
+        '''
+        results = list()
+        pos_list = list()
+        pos_dict = dict()
+        # Benchmarking
+        feature_collecting_time_cost = 0
+        predict_time_cost = 0
+
+        pos = seed_position
+        for pi in xrange(0, iterations):
+            # Boundary
+            if pos < 0:
+                pos = 0
+            elif pos >= len(feature_extractor.signal_in):
+                pos = len(feature_extractor.signal_in) - 1
+
+            pos_list.append(pos)
+
+            if pos not in pos_dict:
+                start_time = time.time()
                 feature_vector = np.array(feature_extractor.frompos(pos))
                 feature_vector = feature_vector.reshape(1, -1)
+                feature_collecting_time_cost += time.time() - start_time
+                start_time = time.time()
                 value = self.regressor.predict(feature_vector)
+                predict_time_cost += time.time() - start_time
                 pos_dict[pos] = value
             else:
                 value = pos_dict[pos]
@@ -228,12 +307,9 @@ class RandomWalker(object):
             # threshold = self.sigmod_function(threshold)
             direction = -1.0 if random.ranf() >= threshold else 1.0
             pos += int(direction * stepsize)
-            # Boundary
-            if pos < 0:
-                pos = 0
-            elif pos >= len(feature_extractor.signal_in):
-                pos = len(feature_extractor.signal_in) - 1
 
+        # print 'Feature collecting time cost: %f secs.' % feature_collecting_time_cost
+        # print 'Prediction time cost %f seconds.' % predict_time_cost
         return zip(pos_list, results)
 
     def testing_walk(self, raw_signal, seed_position,
@@ -262,6 +338,12 @@ class RandomWalker(object):
         pos = seed_position
         start_time = time.time()
         for pi in xrange(0, iterations):
+            # Boundary
+            if pos < 0:
+                pos = 0
+            elif pos >= len(raw_signal):
+                pos = len(raw_signal) - 1
+
             pos_list.append(pos)
 
             if pos not in pos_dict:
@@ -278,11 +360,6 @@ class RandomWalker(object):
             # threshold = self.sigmod_function(threshold)
             direction = -1.0 if random.ranf() >= threshold else 1.0
             pos += int(direction * stepsize)
-            # Boundary
-            if pos < 0:
-                pos = 0
-            elif pos >= len(raw_signal):
-                pos = len(raw_signal) - 1
         print 'Iteration time cost: %f s.' % (time.time() - start_time)
 
         return zip(pos_list, results)
