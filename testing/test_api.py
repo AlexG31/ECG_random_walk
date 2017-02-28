@@ -9,6 +9,7 @@ import joblib
 import pdb
 
 from dpi.DPI_QRS_Detector import DPI_QRS_Detector as DPI
+from dpi.QrsTypeDetector import QrsTypeDetector
 from QTdata.loadQTdata import QTloader
 from random_walker import RandomWalker
 
@@ -24,8 +25,26 @@ def Testing(raw_sig, fs, model_list):
     dpi = DPI(debug_info = dict())
     r_list = dpi.QRS_Detection(raw_sig, fs = fs)
     walk_results = Testing_random_walk(raw_sig, fs, r_list, model_list)
+    print 'Random walk len raw_sig', len(raw_sig)
+
     walk_results.extend(zip(r_list, ['R',] * len(r_list)))
+    walk_results.extend(Testing_QS(raw_sig, fs, r_list))
+    print 'len raw_sig', len(raw_sig)
     return walk_results
+
+def Testing_QS(raw_sig, fs, r_list):
+    '''Detect positions of Q and S based on given R position.'''
+    qrstype = QrsTypeDetector(fs)
+    results = list()
+    for r_pos in r_list:
+        r_pos = int(r_pos)
+        qrs_pos, qrs_text = qrstype.GetQrsType(
+                raw_sig,
+                r_pos - 10 / 250.0 * fs, r_pos, r_pos + 10 / 250.0 * fs,
+                debug_plot = False)
+        results.append((qrs_pos[0], 'Ronset'))
+        results.append((qrs_pos[2], 'Roffset'))
+    return results
 
 def Testing_random_walk(raw_sig, fs, qrs_locations, model_list):
     '''
@@ -75,22 +94,24 @@ def Testing_random_walk(raw_sig, fs, qrs_locations, model_list):
 
 
 
-def GetModels():
+def GetModels(model_folder, pattern_file_name):
     '''Returns model dict.'''
     label_list = ['P', 'Ponset', 'Poffset',
-            'T', 'Toffset',
-            'Ronset', 'Roffset']
+            'T', 'Toffset',]
+    # label_list = ['P', 'Ponset', 'Poffset',
+            # 'T', 'Toffset',
+            # 'Ronset', 'Roffset']
     bias_list = [
                 -0.19, -0.195, -0.185,
                 0.26, 0.27,
                 -0.02, 0.02,
             ]
     # Get model dict
-    model_folder = '/home/alex/LabGit/ECG_random_walk/training/data/m4_models'
     models = list()
     for target_label, bias in zip(label_list, bias_list):
         model_file_name = os.path.join(model_folder, target_label + '.mdl')
-        walker = RandomWalker(target_label = target_label)
+        walker = RandomWalker(target_label = target_label,
+                random_pattern_file_name = pattern_file_name)
         walker.load_model(model_file_name)
         models.append((walker, bias))
     return models
@@ -99,13 +120,16 @@ def GetModels():
 
 def Test1():
     '''Test case1.'''
+    record_name = 'sel30'
     fs = 250.0
     qt = QTloader()
-    sig = qt.load('sel103')
+    sig = qt.load(record_name)
     raw_sig = sig['sig']
     raw_sig = raw_sig[0:250 * 20]
 
-    model_list = GetModels()
+    model_folder = '/home/alex/LabGit/ECG_random_walk/training/data/m3_full_models'
+    pattern_file_name = '/home/alex/LabGit/ECG_random_walk/training/data/m3_full_models/random_pattern.json'
+    model_list = GetModels(model_folder, pattern_file_name)
     start_time = time.time()
     # results = Testing_random_walk(raw_sig, 250.0, r_list, model_list)
     results = Testing(raw_sig, 250.0, model_list)
@@ -126,7 +150,7 @@ def Test1():
         plt.plot(pos_list, amp_list, 'o',
                 markersize = 15,
                 label = label)
-    plt.title('sel32')
+    plt.title(record_name)
     plt.grid(True)
     plt.legend()
     plt.show()

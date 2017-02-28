@@ -44,7 +44,7 @@ class ECGfeatures:
         # Default value of random relation files.
         # May denoise rawsig to get sig
         self.signal_in = rawsig
-        self.rawsig = rawsig
+        self.rawsig = rawsig[:]
         self.config = configuration_info
 
         self.random_relation_path_ = self.config['random_pattern_path']
@@ -52,8 +52,8 @@ class ECGfeatures:
 
         # Do SWT once for all.
         wt_level = self.config['WT_LEVEL']
-        rawsig = self.crop_data_for_swt(rawsig)
-        coeflist = pywt.swt(rawsig, wavelet, wt_level)
+        self.rawsig = self.crop_data_for_swt(self.rawsig)
+        coeflist = pywt.swt(self.rawsig, wavelet, wt_level)
         cAlist, cDlist = zip(*coeflist)
         self.cAlist = cAlist[::-1]
         self.cDlist = cDlist[::-1]
@@ -82,39 +82,38 @@ class ECGfeatures:
         return self.getWTfeatureforpos(pos)
 
     
-    def getWindowedSignal(self,x,sig, fixed_window_length):
+    def getWindowedSignal(self, x, sig, fixed_window_length):
         '''Get windowed signal segment centered in x.'''
         # Padding with head or tail element when out of bound.
 
-        # get windowed signal from original signal
         # padding zeros if near boundaries
         FixedWindowLen = fixed_window_length
-        winlen_hlf = int(fixed_window_length/ 2)
-        # return windowed sig 
-        winsig = []
-        if x <winlen_hlf:
-            # use sig[0] to extend left
-            winsig.extend([sig[0]]*(winlen_hlf-x))
-            # original sigal
-            winsig.extend(sig[0:x])
+
+        # Return windowed sig 
+        segment = []
+        left_bound = x - int(fixed_window_length / 2)
+        right_bound = left_bound + fixed_window_length
+        if right_bound <= 0:
+            segment = [sig[0], ] * fixed_window_length
+        elif left_bound >= len(sig):
+            segment = [sig[-1], ] * fixed_window_length
         else:
-            winsig.extend(sig[x-winlen_hlf:x])
-        # for odd & even FixedWindowLen
-        right_bound = x+winlen_hlf +1
-        if FixedWindowLen%2 == 0:
-            right_bound -= 1
-        if right_bound > len(sig):
-            winsig.extend(sig[x:])
-            winsig.extend([sig[-1],]*(right_bound - len(sig)))
-        else:
-            winsig.extend(sig[x:right_bound])
-        # debug
-        if len(winsig) != FixedWindowLen:
-            # error : the returned windowed signal must be a fix-length signal
-            print 'error : the returned windowed signal must be a fix-length signal!'
+            L = max(0, left_bound)
+            R = min(len(sig), right_bound)
+            if left_bound < 0:
+                segment = [sig[0],] * (-left_bound)
+            else:
+                segment = []
+            segment.extend(sig[L:R])
+            if right_bound > len(sig):
+                segment.extend([sig[-1],] * (right_bound - len(sig)))
+            
+                
+        if len(segment) != FixedWindowLen:
+            print 'Error: the windowed signal must be of equal length!'
             pdb.set_trace()
 
-        return winsig
+        return segment
 
     def GetWindowedMatrix(self, position):
         '''Windowing the rawsignal and SWT coefficients.'''
@@ -158,7 +157,6 @@ class ECGfeatures:
         pos = int(pos)
         if pos<0 or pos >= len(self.signal_in):
             raise StandardError('Input position posx must in range of sig indexs!')
-        rawsig = self.rawsig
         
         # Stateful... Apply window in each level of swt coefficients.
         windowed_matrix = self.GetWindowedMatrix(pos)
