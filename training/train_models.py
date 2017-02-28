@@ -104,7 +104,8 @@ def TrainingModels(target_label, model_file_name, training_list):
     random_forest_config = dict(
             max_depth = 10)
     walker = RandomWalker(target_label = target_label,
-            random_forest_config = random_forest_config)
+            random_forest_config = random_forest_config,
+            random_pattern_file_name = os.path.join(os.path.dirname(model_file_name), 'random_pattern.json'))
 
     start_time = time.time()
     for record_name in training_list:
@@ -129,9 +130,9 @@ if __name__ == '__main__':
     label_list = ['P', 'Ponset', 'Poffset',
             'T', 'Toffset',
             'Ronset', 'R', 'Roffset']
-    root_folder = 'data/m4_models'
+    root_folder = 'data/m3_full_models'
     # Refresh training list
-    num_training = 75
+    num_training = 105
     trianing_list = list()
     qt = QTloader()
     record_list = qt.getreclist()

@@ -16,7 +16,8 @@ from sklearn.ensemble import RandomForestRegressor
 class RandomWalker(object):
     '''Random Tree Walk Model for ECG.'''
     def __init__(self, target_label = 'P',
-            random_forest_config = dict()):
+            random_forest_config = dict(),
+            random_pattern_file_name = None):
         '''This class only focus on a single label.'''
         self.target_label = target_label
         self.regressor = None
@@ -24,6 +25,7 @@ class RandomWalker(object):
         self.random_forest_config = random_forest_config
         if 'max_depth' not in self.random_forest_config:
             self.random_forest_config['max_depth'] = 15
+        self.random_pattern_file_name = random_pattern_file_name
 
 
     def gaussian_training_sampling(self,
@@ -64,6 +66,9 @@ class RandomWalker(object):
                     'data',
                     'random_pattern.json'),
                 )
+
+        if self.random_pattern_file_name is not None:
+            conf['random_pattern_path'] = self.random_pattern_file_name
         return conf
 
     def collect_training_data(self, raw_sig, expert_annotations):
