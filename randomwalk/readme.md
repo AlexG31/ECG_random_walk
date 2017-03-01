@@ -1,0 +1,1 @@
+#Random Walker class

@@ -6,6 +6,7 @@ import glob
 import numpy as np
 import matplotlib.pyplot as plt
 import joblib
+import scipy.signal
 import pdb
 
 from dpi.DPI_QRS_Detector import DPI_QRS_Detector as DPI
@@ -14,7 +15,7 @@ from QTdata.loadQTdata import QTloader
 from random_walker import RandomWalker
 
 
-def Testing(raw_sig, fs, model_list):
+def Testing(raw_sig_in, fs, model_list):
     '''Testing API.
     Input:
         raw_sig: ECG signal.
@@ -22,18 +23,28 @@ def Testing(raw_sig, fs, model_list):
     Output:
         List of (pos, label) pairs.
     '''
+    if fs <= 1e-6:
+        raise Exception('Unexpected sampling frequency of %f.' % fs)
+    raw_sig = raw_sig_in[:]
+    if abs(fs - 250.0) > 1e-6:
+        raw_sig = scipy.signal.resample(raw_sig, int(len(raw_sig) / float(fs) * 250.0))
+    fs_inner = 250
+
     dpi = DPI(debug_info = dict())
-    r_list = dpi.QRS_Detection(raw_sig, fs = fs)
-    walk_results = Testing_random_walk(raw_sig, fs, r_list, model_list)
+    r_list = dpi.QRS_Detection(raw_sig, fs = fs_inner)
+    walk_results = Testing_random_walk(raw_sig, fs_inner, r_list, model_list)
     print 'Random walk len raw_sig', len(raw_sig)
 
     walk_results.extend(zip(r_list, ['R',] * len(r_list)))
-    walk_results.extend(Testing_QS(raw_sig, fs, r_list))
-    print 'len raw_sig', len(raw_sig)
+    walk_results.extend(Testing_QS(raw_sig, fs_inner, r_list))
+    # Change result indexes according to sampling frequency
+    walk_results = [[x[0] / 250.0 * fs, x[1]] for x in walk_results]
     return walk_results
 
 def Testing_QS(raw_sig, fs, r_list):
     '''Detect positions of Q and S based on given R position.'''
+    if fs <= 1e-6:
+        raise Exception('Unexpected sampling frequency of %f.' % fs)
     qrstype = QrsTypeDetector(fs)
     results = list()
     for r_pos in r_list:
@@ -56,7 +67,10 @@ def Testing_random_walk(raw_sig, fs, qrs_locations, model_list):
     Output:
         List of (pos, label) pairs.
     '''
+    if fs <= 1e-6:
+        raise Exception('Unexpected sampling frequency of %f.' % fs)
     testing_results = list()
+    
 
     # For benchmarking
     Tnew_list = list()
@@ -83,7 +97,7 @@ def Testing_random_walk(raw_sig, fs, qrs_locations, model_list):
 
             path, probability = zip(*results)
             Tnew_list.append(len(set(path)))
-            predict_position = int(np.mean(path[len(path) / 2:]))
+            predict_position = int(np.mean(path[len(path) / 2:]) / 250.0 * fs)
             testing_results.append((predict_position,
                     walker.target_label))
             
@@ -127,8 +141,8 @@ def Test1():
     raw_sig = sig['sig']
     raw_sig = raw_sig[0:250 * 20]
 
-    model_folder = '/home/alex/LabGit/ECG_random_walk/training/data/m3_full_models'
-    pattern_file_name = '/home/alex/LabGit/ECG_random_walk/training/data/m3_full_models/random_pattern.json'
+    model_folder = '/home/alex/LabGit/ECG_random_walk/randomwalk/data/m3_full_models'
+    pattern_file_name = '/home/alex/LabGit/ECG_random_walk/randomwalk/data/m3_full_models/random_pattern.json'
     model_list = GetModels(model_folder, pattern_file_name)
     start_time = time.time()
     # results = Testing_random_walk(raw_sig, 250.0, r_list, model_list)

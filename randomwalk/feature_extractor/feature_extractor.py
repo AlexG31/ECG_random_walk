@@ -11,6 +11,7 @@ import sys
 import json
 import math
 import pdb
+import numpy as np
 import pywt
 import array
 import matplotlib.pyplot as plt
@@ -38,8 +39,13 @@ class ECGfeatures:
                 dictionary of feature extraction configurations.
         '''
         # Validation Check
-        if not isinstance(rawsig, list) and not isinstance(rawsig, array.array):
+        if (not isinstance(rawsig, list) and
+                not isinstance(rawsig, array.array) and
+                not isinstance(rawsig, np.ndarray)
+        ):
             raise StandardError('Input rawsig is not a list type![WTdenoise]')
+        if isinstance(rawsig, np.ndarray):
+            rawsig = rawsig.tolist()
 
         # Default value of random relation files.
         # May denoise rawsig to get sig

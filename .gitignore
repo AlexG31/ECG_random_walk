@@ -1,5 +1,6 @@
 # Random Walk
 training/data/*
+randomwalk/data/*
 **.*~
 # Byte-compiled / optimized / DLL files
 __pycache__/
