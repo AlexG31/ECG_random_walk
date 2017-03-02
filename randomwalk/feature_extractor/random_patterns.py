@@ -108,18 +108,18 @@ def refresh_project_random_relations_computeLen(copyTo = None):
         log.info('Copying %s to %s' %(WTrrJsonFileName, copyTo))
         copyfile(WTrrJsonFileName,copyTo)
 
-def RefreshRswtPairs(result_file_name):
+def RefreshRswtPairs(configure, result_file_name):
     '''Refresh randomly selected pairs.'''
     # Level of wavelet transform.
-    wt_level = conf['WT_LEVEL']
-    sampling_frequency = conf['fs']
-    fixed_window_length = conf['winlen_ratio_to_fs'] * sampling_frequency
+    wt_level = configure['WT_LEVEL']
+    sampling_frequency = configure['fs']
+    fixed_window_length = int(configure['winlen_ratio_to_fs'] * sampling_frequency)
 
     # Relation list per level.(total:wt_level + 1)
     RelList = []
-    total_pair_number = conf['WTrandselfeaturenumber_apprx']
+    total_pair_number = configure['WTrandselfeaturenumber_apprx']
 
-    totally_random_pair_number = conf['totally_random_pair_number']
+    totally_random_pair_number = configure['totally_random_pair_number']
 
     # Why divide by 2? The pairs' both diff&abs are added to feature vector,
     pair_number_per_layer = total_pair_number / (wt_level - 1.0) / 2.0

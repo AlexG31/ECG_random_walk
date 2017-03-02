@@ -14,7 +14,10 @@ from feature_extractor.feature_extractor import ECGfeatures
 from sklearn.ensemble import RandomForestRegressor
 
 class RandomWalker(object):
-    '''Random Tree Walk Model for ECG.'''
+    '''Random Tree Walk Model for ECG.
+    [Important]:
+        All input signals must resample to fs = 250Hz.
+    '''
     def __init__(self, target_label = 'P',
             random_forest_config = dict(),
             random_pattern_file_name = None):

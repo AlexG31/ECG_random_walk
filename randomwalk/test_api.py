@@ -15,6 +15,7 @@ from QTdata.loadQTdata import QTloader
 from random_walker import RandomWalker
 
 
+
 def Testing(raw_sig_in, fs, model_list):
     '''Testing API.
     Input:
@@ -33,7 +34,6 @@ def Testing(raw_sig_in, fs, model_list):
     dpi = DPI(debug_info = dict())
     r_list = dpi.QRS_Detection(raw_sig, fs = fs_inner)
     walk_results = Testing_random_walk(raw_sig, fs_inner, r_list, model_list)
-    print 'Random walk len raw_sig', len(raw_sig)
 
     walk_results.extend(zip(r_list, ['R',] * len(r_list)))
     walk_results.extend(Testing_QS(raw_sig, fs_inner, r_list))
@@ -79,7 +79,10 @@ def Testing_random_walk(raw_sig, fs, qrs_locations, model_list):
     # Maybe batch walk?
     feature_extractor = None
     for R_pos in qrs_locations:
+        R_pos = R_pos * 250.0 / fs
         for walker, bias in model_list:
+            if abs(fs - 250.0) > 1e-6:
+                raise Exception('Bias has default fs = 250.0Hz!')
             bias = int(float(fs) * bias)
 
             if feature_extractor is None:
