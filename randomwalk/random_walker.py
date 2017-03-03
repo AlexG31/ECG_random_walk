@@ -64,10 +64,7 @@ class RandomWalker(object):
         conf = dict(
                 fs = 250,
                 winlen_ratio_to_fs = 4,
-                WT_LEVEL = 6,
-                random_pattern_path = os.path.join(current_folder,
-                    'data',
-                    'random_pattern.json'),
+                WT_LEVEL = 6
                 )
 
         if self.random_pattern_file_name is not None:

@@ -3,6 +3,7 @@ import os
 import sys
 import time
 import glob
+import multiprocessing
 import json
 import random
 import numpy as np
@@ -35,57 +36,54 @@ def TestSignal(raw_sig, fs, test_range, model_folder, random_pattern_file_name):
 
     return results
     
-def TestQT(save_result_folder):
+def TestQT(record_name, save_result_folder, model_folder, random_pattern_file_name):
     '''Test case1.'''
     fs = 250.0
     qt = QTloader()
-    record_list = qt.getreclist()
-    with open(os.path.join(save_result_folder, 'training_list.json'), 'r') as fin:
-        training_list = json.load(fin)
-        testing_list = list(set(record_list) - set(training_list))
-    for record_name in testing_list:
-        print 'Testing %s' % record_name
-        sig = qt.load(record_name)
-        expert_annotations = qt.getExpert(record_name)
-        pos_list, label_list = zip(*expert_annotations)
-        test_range = [np.min(pos_list) - 100, np.max(pos_list) + 100]
-        
-        result_mat = list()
-        print 'Lead1'
-        raw_sig = sig['sig']
-        results = TestSignal(raw_sig, fs, test_range)
-        for ind in xrange(0, len(results)):
-            results[ind] = [results[ind][0] + test_range[0], results[ind][1]]
-        result_mat.append((record_name, results))
-        print 'Lead2'
-        raw_sig = sig['sig2']
-        results = TestSignal(raw_sig, fs, test_range)
-        for ind in xrange(0, len(results)):
-            results[ind] = [results[ind][0] + test_range[0], results[ind][1]]
-        result_mat.append((record_name + '_sig2', results))
-        
-        result_file_name = os.path.join(save_result_folder, '%s.json' % record_name)
-        with open(result_file_name, 'w') as fout:
-            json.dump(result_mat, fout, indent = 4)
-            print 'Results saved as %s.' % result_file_name
 
-        # Display results
-        # plt.figure(1)
-        # plt.plot(raw_sig, label = 'ECG')
-        # pos_list, label_list = zip(*results)
-        # labels = set(label_list)
-        # for label in labels:
-            # pos_list = [int(x[0]) for x in results if x[1] == label]
-            # amp_list = [raw_sig[x] for x in pos_list]
-            # plt.plot(pos_list, amp_list, 'o',
-                    # markersize = 15,
-                    # label = label)
-        # plt.title(record_name)
-        # plt.grid(True)
-        # plt.legend()
-        # plt.show()
+    sig = qt.load(record_name)
+    expert_annotations = qt.getExpert(record_name)
+    pos_list, label_list = zip(*expert_annotations)
+    test_range = [np.min(pos_list) - 100, np.max(pos_list) + 100]
+    
+    result_mat = list()
 
-def SplitQTrecords(num_training = 5):
+    print 'Lead1'
+    raw_sig = sig['sig']
+    results = TestSignal(raw_sig, fs, test_range, model_folder, random_pattern_file_name)
+    for ind in xrange(0, len(results)):
+        results[ind] = [results[ind][0] + test_range[0], results[ind][1]]
+    result_mat.append((record_name, results))
+
+    print 'Lead2'
+    raw_sig = sig['sig2']
+    results = TestSignal(raw_sig, fs, test_range, model_folder, random_pattern_file_name)
+    for ind in xrange(0, len(results)):
+        results[ind] = [results[ind][0] + test_range[0], results[ind][1]]
+    result_mat.append((record_name + '_sig2', results))
+    
+    result_file_name = os.path.join(save_result_folder, '%s.json' % record_name)
+    with open(result_file_name, 'w') as fout:
+        json.dump(result_mat, fout, indent = 4)
+        print 'Results saved as %s.' % result_file_name
+
+    # Display results
+    # plt.figure(1)
+    # plt.plot(raw_sig, label = 'ECG')
+    # pos_list, label_list = zip(*results)
+    # labels = set(label_list)
+    # for label in labels:
+        # pos_list = [int(x[0]) for x in results if x[1] == label]
+        # amp_list = [raw_sig[x] for x in pos_list]
+        # plt.plot(pos_list, amp_list, 'o',
+                # markersize = 15,
+                # label = label)
+    # plt.title(record_name)
+    # plt.grid(True)
+    # plt.legend()
+    # plt.show()
+
+def SplitQTrecords(num_training = 75):
     '''Split records for testing & training.'''
     trianing_list = list()
     qt = QTloader()
@@ -133,7 +131,8 @@ def TrainingModels(target_label, model_file_name, training_list, random_pattern_
     qt = QTloader()
 
     random_forest_config = dict(
-            max_depth = 10)
+            max_depth = 10,
+            n_jobs = 1)
     walker = RandomWalker(target_label = target_label,
             random_forest_config = random_forest_config,
             random_pattern_file_name = random_pattern_file_name)
@@ -152,8 +151,15 @@ def TrainingModels(target_label, model_file_name, training_list, random_pattern_
     print 'Serializing model time cost %f' % (time.time() - start_time)
 
     
+def pool_test(args):
+    '''Function for pool testing.'''
+    record_name, save_result_folder, model_folder, random_pattern_file_name = args
+    print 'Testing %s' % record_name
+    TestQT(record_name, save_result_folder, model_folder, random_pattern_file_name)
+    
 def RoundExperiment(save_result_folder):
     '''Training & Testing 30 records on QT'''
+    qt = QTloader()
     # Training
     if os.path.exists(save_result_folder):
         cmd = raw_input('Folder: \n %s\nAlready exists, remove it?(Y/N)' % save_result_folder)
@@ -167,8 +173,7 @@ def RoundExperiment(save_result_folder):
     model_folder = os.path.join(save_result_folder, 'models')
     os.makedirs(model_folder)
     label_list = ['P', 'Ponset', 'Poffset',
-            'T', 'Toffset',
-            'Ronset', 'R', 'Roffset']
+            'T', 'Toffset',]
     training_list, testing_list = SplitQTrecords()
 
     # Save training list
@@ -176,7 +181,7 @@ def RoundExperiment(save_result_folder):
         json.dump(training_list, fout, indent = 4)
     # Save random patterns
     random_pattern_file_name = os.path.join(os.path.join(model_folder, 'random_pattern.json'))
-    # [TODO]Refresh random patterns
+    # Refresh random patterns
     configure = dict(
             WT_LEVEL = 6,
             fs = 250.0,
@@ -192,42 +197,24 @@ def RoundExperiment(save_result_folder):
         TrainingModels(target_label, model_file_name, training_list, random_pattern_file_name)
 
     # Testing
-    for record_name in testing_list:
-        print 'Testing %s' % record_name
-        sig = qt.load(record_name)
-        fs = 250.0
-        # Get Test Range
-        expert_annotations = qt.getExpert(record_name)
-        pos_list, label_list = zip(*expert_annotations)
-        range_left = max(np.min(pos_list) - 100, 0)
-        range_right = min(np.max(pos_list) + 100, len(sig['sig']))
-        test_range = [range_left, range_right]
-        
-        result_mat = list()
-        print 'Lead1'
-        raw_sig = sig['sig']
-        results = TestSignal(raw_sig, fs, test_range, model_folder, random_pattern_file_name)
-        for ind in xrange(0, len(results)):
-            results[ind] = [results[ind][0] + test_range[0], results[ind][1]]
-        result_mat.append((record_name, results))
-        print 'Lead2'
-        raw_sig = sig['sig2']
-        results = TestSignal(raw_sig, fs, test_range, model_folder, random_pattern_file_name)
-        for ind in xrange(0, len(results)):
-            results[ind] = [results[ind][0] + test_range[0], results[ind][1]]
-        result_mat.append((record_name + '_sig2', results))
-        
-        result_file_name = os.path.join(save_result_folder, '%s.json' % record_name)
-        with open(result_file_name, 'w') as fout:
-            json.dump(result_mat, fout, indent = 4)
-            print 'Results saved as %s.' % result_file_name
+    lt = len(testing_list)
+    arg_list = zip(testing_list,
+            [save_result_folder,] * lt,
+            [model_folder,] * lt,
+            [random_pattern_file_name,] * lt,
+            )
+    pool = multiprocessing.Pool(processes = 3)
+    pool.map(pool_test, arg_list)
+    pool.close()
+    pool.join()
     
     
 
 if __name__ == '__main__':
-    # result_folder = '/home/alex/LabGit/ECG_random_walk/randomwalk/data/test_results/r2'
-    # TestQT(result_folder)
+    # result_folder = '/home/alex/LabGit/ECG_random_walk/randomwalk/data/test_results/r3/round1'
+    # TestQT('sel40', result_folder, os.path.join(result_folder, 'models'), os.path.join(result_folder, 'models', 'random_pattern.json'))
+
     result_folder = '/home/alex/LabGit/ECG_random_walk/randomwalk/data/test_results/r3'
-    for ind in xrange(1, 3 + 1):
+    for ind in xrange(15, 30 + 1):
         RoundExperiment(os.path.join(result_folder, 'round%d' % ind))
 
