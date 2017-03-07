@@ -114,13 +114,13 @@ def Testing_random_walk(raw_sig, fs, qrs_locations, model_list):
 def GetModels(model_folder, pattern_file_name):
     '''Returns model dict.'''
     label_list = ['P', 'Ponset', 'Poffset',
-            'T', 'Toffset',]
+            'T', 'Toffset', 'Tonset']
     # label_list = ['P', 'Ponset', 'Poffset',
             # 'T', 'Toffset',
             # 'Ronset', 'Roffset']
     bias_list = [
                 -0.19, -0.195, -0.185,
-                0.26, 0.27,
+                0.26, 0.27, 0.1,
                 -0.02, 0.02,
             ]
     # Get model dict
