@@ -104,9 +104,9 @@ def Testing_random_walk(raw_sig, fs, qrs_locations, model_list):
             testing_results.append((predict_position,
                     walker.target_label))
             
-    print 'Walker time cost %f seconds.' % walker_time_cost
-    print 'Walker average time cost %f seconds.' % (walker_time_cost / walker_count)
-    print 'Average number of new samples to test: %f.' % np.mean(Tnew_list)
+    #print 'Walker time cost %f seconds.' % walker_time_cost
+    #print 'Walker average time cost %f seconds.' % (walker_time_cost / walker_count)
+    #print 'Average number of new samples to test: %f.' % np.mean(Tnew_list)
     return testing_results
 
 
@@ -150,11 +150,11 @@ def Test1():
     start_time = time.time()
     # results = Testing_random_walk(raw_sig, 250.0, r_list, model_list)
     results = Testing(raw_sig, 250.0, model_list)
-    print 'Testing time cost %f secs.' % (time.time() - start_time)
+    #print 'Testing time cost %f secs.' % (time.time() - start_time)
 
     samples_count = len(raw_sig)
     time_span = samples_count / fs
-    print 'Span of testing range: %f samples(%f seconds).' % (samples_count, time_span)
+    #print 'Span of testing range: %f samples(%f seconds).' % (samples_count, time_span)
 
     # Display results
     plt.figure(1)
