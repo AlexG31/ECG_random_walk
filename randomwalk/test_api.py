@@ -16,7 +16,7 @@ from random_walker import RandomWalker
 
 
 
-def Testing(raw_sig_in, fs, model_list):
+def Testing(raw_sig_in, fs, model_list, walker_iterations = 100, walker_stepsize = 10):
     '''Testing API.
     Input:
         raw_sig: ECG signal.
@@ -33,7 +33,7 @@ def Testing(raw_sig_in, fs, model_list):
 
     dpi = DPI(debug_info = dict())
     r_list = dpi.QRS_Detection(raw_sig, fs = fs_inner)
-    walk_results = Testing_random_walk(raw_sig, fs_inner, r_list, model_list)
+    walk_results = Testing_random_walk(raw_sig, fs_inner, r_list, model_list, iterations = walker_iterations, stepsize = walker_stepsize)
 
     walk_results.extend(zip(r_list, ['R',] * len(r_list)))
     walk_results.extend(Testing_QS(raw_sig, fs_inner, r_list))
@@ -57,7 +57,7 @@ def Testing_QS(raw_sig, fs, r_list):
         results.append((qrs_pos[2], 'Roffset'))
     return results
 
-def Testing_random_walk(raw_sig, fs, qrs_locations, model_list):
+def Testing_random_walk(raw_sig, fs, qrs_locations, model_list, iterations = 100, stepsize = 10):
     '''
     Testing with random walk based on QRS locations.
     Inputs:

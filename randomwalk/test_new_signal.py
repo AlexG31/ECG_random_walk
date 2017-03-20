@@ -98,10 +98,14 @@ def Testing_random_walk(raw_sig_in, fs, qrs_locations, model_list):
 
 def Test1():
     '''Test case1.'''
-    data = sio.loadmat('./data/ft.mat')
-    v2 = np.squeeze(data['II'])
-    raw_sig = v2
-    fs = 500
+    # data = sio.loadmat('./data/ft.mat')
+    # v2 = np.squeeze(data['II'])
+    # raw_sig = v2
+    # fs = 500
+    qt = QTloader()
+    sig = qt.load('sel32')
+    raw_sig = sig['sig'][1000:3000]
+    fs = 250
     # raw_sig = scipy.signal.resample(raw_sig, len(raw_sig) / 2)
     # fs = 250
 
