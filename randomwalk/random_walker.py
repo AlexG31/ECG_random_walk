@@ -63,7 +63,7 @@ class RandomWalker(object):
         current_folder = os.path.dirname(current_file_path)
         conf = dict(
                 fs = 250,
-                winlen_ratio_to_fs = 4,
+                winlen_ratio_to_fs = 3,
                 WT_LEVEL = 6
                 )
 
@@ -99,7 +99,7 @@ class RandomWalker(object):
             self.training_data.append((feature_vector, value))
         
     def save_model(self, model_file_name):
-        with open(model_file_name, 'w') as fout:
+        with open(model_file_name, 'wb') as fout:
             joblib.dump(self.regressor, fout, compress = True)
             print 'Model save as %s.' % model_file_name
 
@@ -268,7 +268,8 @@ class RandomWalker(object):
     def testing_walk_extractor(self, feature_extractor,
             seed_position,
             iterations =  100,
-            stepsize = 4):
+            stepsize = 4,
+            confined_range = None):
         '''
         Start random walk with seed position.
         Input:
@@ -312,6 +313,14 @@ class RandomWalker(object):
             # threshold = self.sigmod_function(threshold)
             direction = -1.0 if random.ranf() >= threshold else 1.0
             pos += int(direction * stepsize)
+
+
+            # Next position confined range
+            if confined_range is not None:
+                if pos > confined_range[1]:
+                    pos = confined_range[1]
+                elif pos < confined_range[0]:
+                    pos = confined_range[0]
 
         # print 'Feature collecting time cost: %f secs.' % feature_collecting_time_cost
         # print 'Prediction time cost %f seconds.' % predict_time_cost

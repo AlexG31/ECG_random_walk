@@ -16,7 +16,6 @@ from dpi.DPI_QRS_Detector import DPI_QRS_Detector as DPI
 from dpi.QrsTypeDetector import QrsTypeDetector
 from QTdata.loadQTdata import QTloader
 from random_walker import RandomWalker
-from mcmc.p_detection.PDelin_Gaussian import PDelineator
 from mcmc.wave_delineator import WaveDelineator
 
 def CutWave(raw_sig, left_bound, right_bound):

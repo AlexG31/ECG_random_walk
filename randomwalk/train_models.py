@@ -130,7 +130,7 @@ if __name__ == '__main__':
     label_list = ['P', 'Ponset', 'Poffset',
             'T', 'Toffset',
             'Ronset', 'R', 'Roffset']
-    root_folder = 'data/m3_full_models'
+    root_folder = 'data/Lw3Np4000'
     # Refresh training list
     num_training = 105
     trianing_list = list()

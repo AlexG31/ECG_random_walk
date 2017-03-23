@@ -36,7 +36,7 @@ def Testing(raw_sig_in, fs, model_list, walker_iterations = 100, walker_stepsize
     walk_results = Testing_random_walk(raw_sig, fs_inner, r_list, model_list, iterations = walker_iterations, stepsize = walker_stepsize)
 
     walk_results.extend(zip(r_list, ['R',] * len(r_list)))
-    walk_results.extend(Testing_QS(raw_sig, fs_inner, r_list))
+    # walk_results.extend(Testing_QS(raw_sig, fs_inner, r_list))
     # Change result indexes according to sampling frequency
     walk_results = [[x[0] / 250.0 * fs, x[1]] for x in walk_results]
     return walk_results
@@ -73,6 +73,8 @@ def Testing_random_walk(raw_sig, fs, qrs_locations, model_list, iterations = 100
     
 
     # For benchmarking
+    longest_path_len = 0
+    longest_path_Rpos = -1
     Tnew_list = list()
     walker_time_cost = 0
     walker_count = 0
@@ -88,9 +90,15 @@ def Testing_random_walk(raw_sig, fs, qrs_locations, model_list, iterations = 100
             if feature_extractor is None:
                 feature_extractor = walker.GetFeatureExtractor(raw_sig)
             start_time = time.time()
+            if bias < 0:
+                confined_range = [max(0, int(R_pos - fs * 0.8)), R_pos]
+            else:
+                confined_range = [R_pos, min(len(raw_sig) - 1, int(R_pos + fs * 0.8))]
+
             results = walker.testing_walk_extractor(feature_extractor, R_pos + bias,
                     iterations = 100,
-                    stepsize = 10)
+                    stepsize = 10,
+                    confined_range = confined_range)
             # results = walker.testing_walk(raw_sig, R_pos + bias,
                     # iterations = 100,
                     # stepsize = 10)
@@ -99,25 +107,32 @@ def Testing_random_walk(raw_sig, fs, qrs_locations, model_list, iterations = 100
             walker_count += 1
 
             path, probability = zip(*results)
+            path_len = len(set(path))
+            if path_len > longest_path_len:
+                longest_path_len = path_len
+                longest_path_Rpos = R_pos
+            
             Tnew_list.append(len(set(path)))
             predict_position = int(np.mean(path[len(path) / 2:]) / 250.0 * fs)
             testing_results.append((predict_position,
                     walker.target_label))
             
-    #print 'Walker time cost %f seconds.' % walker_time_cost
-    #print 'Walker average time cost %f seconds.' % (walker_time_cost / walker_count)
-    #print 'Average number of new samples to test: %f.' % np.mean(Tnew_list)
+    # print 'Walker time cost %f seconds.' % walker_time_cost
+    # print 'Walker average time cost %f seconds.' % (walker_time_cost / walker_count)
+    # print 'Average number of new samples to test: %f.' % np.mean(Tnew_list)
+    # print 'Longest path:%d, with Rpos:%d' % (longest_path_len, longest_path_Rpos)
+    # print 'Len of Tnewlist:', len(Tnew_list)
     return testing_results
 
 
 
 def GetModels(model_folder, pattern_file_name):
     '''Returns model dict.'''
-    label_list = ['P', 'Ponset', 'Poffset',
-            'T', 'Toffset', 'Tonset']
     # label_list = ['P', 'Ponset', 'Poffset',
-            # 'T', 'Toffset',
-            # 'Ronset', 'Roffset']
+            # 'T', 'Toffset', 'Tonset']
+    label_list = ['P', 'Ponset', 'Poffset',
+            'T', 'Toffset', 'Tonset',
+            'Ronset', 'Roffset']
     bias_list = [
                 -0.19, -0.195, -0.185,
                 0.26, 0.27, 0.1,
