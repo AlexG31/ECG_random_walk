@@ -4,13 +4,11 @@ import sys
 import time
 import glob
 import numpy as np
-import matplotlib.pyplot as plt
 import joblib
 import scipy.signal
 import pdb
 
 from dpi.DPI_QRS_Detector import DPI_QRS_Detector as DPI
-from dpi.QrsTypeDetector import QrsTypeDetector
 from random_walker import RandomWalker
 
 
@@ -44,6 +42,7 @@ def Testing_QS(raw_sig, fs, r_list):
     '''Detect positions of Q and S based on given R position.'''
     if fs <= 1e-6:
         raise Exception('Unexpected sampling frequency of %f.' % fs)
+    from dpi.QrsTypeDetector import QrsTypeDetector
     qrstype = QrsTypeDetector(fs)
     results = list()
     for r_pos in r_list:
@@ -256,12 +255,14 @@ def GetModels(model_folder, pattern_file_name):
 
 def Test1():
     '''Test case1.'''
+    import matplotlib.pyplot as plt
     record_name = 'sel30'
     fs = 250.0
-    from QTdata.loadQTdata import QTloader
-    qt = QTloader()
-    sig = qt.load(record_name)
-    raw_sig = sig['sig']
+    #from QTdata.loadQTdata import QTloader
+    #qt = QTloader()
+    #sig = qt.load(record_name)
+    #raw_sig = sig['sig']
+    raw_sig = [1.3, ] * 10000
     raw_sig = raw_sig[0:250 * 20]
 
     model_folder = '/home/alex/LabGit/ECG_random_walk/randomwalk/data/m3_full_models'

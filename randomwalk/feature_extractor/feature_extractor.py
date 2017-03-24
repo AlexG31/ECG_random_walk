@@ -14,7 +14,6 @@ import pdb
 import numpy as np
 import pywt
 import array
-import matplotlib.pyplot as plt
 
 
 
@@ -146,6 +145,7 @@ class ECGfeatures:
     def debug_PlotWindowedMatrix(self,matrix,max_level = 4):
         '''Plot matrix in figure.'''
         
+        import matplotlib.pyplot as plt
         plt.figure()
         plt.grid(True)
         axes_index = 1
@@ -211,6 +211,7 @@ if __name__ == '__main__':
     feature_extractor = ECGfeatures(sigStruct['sig'])
     windowed_matrix = feature_extractor.GetWindowedMatrix(9000)
     # plot swt coefficients
+    import matplotlib.pyplot as plt
     plt.figure(1)
     for ind in xrange(1,len(feature_extractor.cAlist)):
         plt.subplot(7,1,ind)

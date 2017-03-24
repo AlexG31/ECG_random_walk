@@ -2,14 +2,12 @@
 import os
 import sys
 import time
-import matplotlib.pyplot as plt
 import pdb
 import bisect
 import joblib
 import numpy as np
 import numpy.random as random
 import random as pyrandom
-from QTdata.loadQTdata import QTloader
 from feature_extractor.feature_extractor import ECGfeatures
 from sklearn.ensemble import RandomForestRegressor
 
@@ -398,6 +396,7 @@ def Test1():
     right_pos_list = [x[0] for x in results if x[1] > 0]
     right_value_list = [x[1] for x in results if x[1] > 0]
     
+    import matplotlib.pyplot as plt
     plt.figure(1)
     plt.plot(sig['sig'], label = record_name)
     amp_list = [raw_sig[x] for x in left_pos_list]
@@ -448,6 +447,7 @@ def Test2():
 
     pos_list, values = zip(*results)
     
+    import matplotlib.pyplot as plt
     plt.figure(1)
     plt.plot(sig['sig'], label = record_name)
     # amp_list = [raw_sig[int(x)] for x in pos_list]
@@ -484,6 +484,7 @@ def Test3():
     print 'trianing used %.3f seconds' % (time.time() - start_time)
 
     seed_position = 100000
+    import matplotlib.pyplot as plt
     plt.figure(1)
     plt.plot(sig['sig'], label = record_name)
     for ti in xrange(0, 20):
