@@ -8,7 +8,7 @@ import joblib
 import numpy as np
 import numpy.random as random
 import random as pyrandom
-from feature_extractor.feature_extractor import ECGfeatures
+from randomwalk.feature_extractor.feature_extractor import ECGfeatures
 from sklearn.ensemble import RandomForestRegressor
 
 class RandomWalker(object):
@@ -102,7 +102,7 @@ class RandomWalker(object):
             print 'Model save as %s.' % model_file_name
 
     def load_model(self, model_file_name):
-        with open(model_file_name, 'r') as fout:
+        with open(model_file_name, 'rb') as fout:
             self.regressor = joblib.load(fout)
 
     def training(self):
