@@ -144,6 +144,12 @@ def RefreshRswtPairs(configure, result_file_name):
     with open(result_file_name, 'w') as fout:
         json.dump(RelList, fout, indent = 4)
 
+def GenLocalPairs():
+    '''Tool for generating pairs.'''
+    with open('./ECGconf.json', 'r') as fin:
+        conf = json.load(fin)
+    RefreshRswtPairs(conf, './pairs-output.json')
+    
 if __name__ == '__main__':
     #print '--- Random relation Test ---'
     #print gen_rand_relations(10,100)
@@ -151,10 +157,11 @@ if __name__ == '__main__':
     #refresh_project_random_relations()
     #for val in Window_Pair_Generator(6):
         #print val
-    N1 = 100
-    N2 = 4
-    rel = random.sample(Window_Pair_Generator(N1),N2)
-    for val in rel:
-        print val
+    # N1 = 100
+    # N2 = 4
+    # rel = random.sample(Window_Pair_Generator(N1),N2)
+    # for val in rel:
+        # print val
+    GenLocalPairs()
     
     
