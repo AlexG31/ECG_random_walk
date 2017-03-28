@@ -9,7 +9,7 @@ import scipy.signal
 import pdb
 
 from dpi.DPI_QRS_Detector import DPI_QRS_Detector as DPI
-from randomwalk.random_walker import RandomWalker
+from random_walker import RandomWalker
 
 
 

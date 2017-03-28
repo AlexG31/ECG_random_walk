@@ -8,7 +8,7 @@ import joblib
 import numpy as np
 import numpy.random as random
 import random as pyrandom
-from randomwalk.feature_extractor.feature_extractor import ECGfeatures
+from feature_extractor.feature_extractor import ECGfeatures
 from sklearn.ensemble import RandomForestRegressor
 
 class RandomWalker(object):
