@@ -273,7 +273,11 @@ class RandomWalker(object):
             iterations =  100,
             stepsize = 4,
             ):
-        '''Start prepared batch testing. Clear prepare bucket afterwards.'''
+        '''Start prepared batch testing. Clear prepare bucket afterwards.
+        Returns:
+            path_list
+            scores_list
+        '''
         if len(self.position_bucket) == 0:
             return list()
 
@@ -283,7 +287,9 @@ class RandomWalker(object):
 
         # For path of bucket elements
         path = list()
-        path_list = [list(), ] * len(self.position_bucket)
+        path_list = list()
+        for ind in xrange(0, len(self.position_bucket)):
+            path_list.append(list())
 
         # For tested position hash
         pos_dict = dict()
@@ -297,9 +303,11 @@ class RandomWalker(object):
             prepare_test_info = list()
             scores = list()
 
-            for bucket_index in xrange(0, len(position_bucket)):
+            # print 'self.position_bucket:', self.position_bucket
+            for bucket_index in xrange(0, len(self.position_bucket)):
                 pos = self.position_bucket[bucket_index]
                 confined_range = self.confined_range_bucket[bucket_index]
+                # print '[%d] pos %d, range(%d, %d)' % (bucket_index, pos, confined_range[0], confined_range[1])
 
                 # Boundary
                 if pos < 0:
@@ -317,7 +325,7 @@ class RandomWalker(object):
 
                 # Prepare for testing
                 if pos not in pos_dict:
-                    self.prepare_test_info.append((pos, bucket_index))
+                    prepare_test_info.append((pos, bucket_index))
                     scores.append(None)
                     # feature_vector = np.array(feature_extractor.frompos(pos))
                     # feature_vector = feature_vector.reshape(1, -1)
@@ -330,24 +338,34 @@ class RandomWalker(object):
                     value = pos_dict[pos]
                     scores.append(value)
 
+            # print 'prepare_test_info:', prepare_test_info
+            # print 'scores:', scores 
+            # print 'path:', zip(*path_list)[-1]
+            # pdb.set_trace()
             # Collecting features
             feature_mat = list()
             for pos, bucket_index in prepare_test_info:
-                feature_vector = np.array(feature_extractor.frompos(pos))
-                feature_vector = feature_vector.reshape(1, -1)
+                feature_vector = feature_extractor.frompos(pos)
+                # feature_vector = np.array(feature_extractor.frompos(pos))
+                # feature_vector = feature_vector.reshape(1, -1)
                 feature_mat.append(feature_vector)
-            # Start random forest testing
-            tested_scores = self.regressor.predict(feature_mat)
-            test_result_info = zip(prepare_test_info, tested_scores)
-            for pos, bucket_index, tested_score in test_result_info:
-                scores[bucket_index] = tested_score
+            if len(feature_mat) > 0:
+                # Start random forest testing
+                tested_scores = self.regressor.predict(feature_mat)
+                test_result_info = zip(prepare_test_info, tested_scores)
+                for test_info_element, tested_score in test_result_info:
+                    pos, bucket_index = test_info_element
+                    scores[bucket_index] = tested_score
+                    pos_dict[pos] = tested_score
             
             # Add to scores_list
             scores_list = zip(scores_list, scores)
 
-            for bucket_index in xrange(0, len(position_bucket)):
+            # Update seed_positions for next round
+            for bucket_index in xrange(0, len(self.position_bucket)):
                 score = scores[bucket_index]
                 pos = self.position_bucket[bucket_index]
+                confined_range = self.confined_range_bucket[bucket_index]
 
                 # Update next position
                 threshold = (score + 1.0) / 2.0
