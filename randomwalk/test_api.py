@@ -31,7 +31,6 @@ def Testing(raw_sig_in, fs, model_list, walker_iterations = 100, walker_stepsize
 
     dpi = DPI(debug_info = dict())
     r_list = dpi.QRS_Detection(raw_sig, fs = fs_inner)
-    print 'r_list:', r_list
 
     walk_results = Testing_random_walk_RR_batch(raw_sig, fs_inner, r_list, model_list, iterations = walker_iterations, stepsize = walker_stepsize)
 
@@ -426,7 +425,7 @@ def Testing_random_walk_RR_batch(raw_sig, fs, qrs_locations, model_list, iterati
         seed_positions_dict[model_label] = list()
         confined_ranges_dict[model_label] = list()
 
-        for qrs_index, current_P in zip(xrange(batch_qrs_index, min(len(qrs_locations), batch_qrs_index + batch_size), batch_size), batch_P_list):
+        for qrs_index, current_P in zip(xrange(batch_qrs_index, min(len(qrs_locations), batch_qrs_index + batch_size)), batch_P_list):
             seed_position = None
             confined_range = None
 
@@ -455,30 +454,123 @@ def Testing_random_walk_RR_batch(raw_sig, fs, qrs_locations, model_list, iterati
 
 
         # Testing Poffset
-        # model_label = 'Poffset'
-        # walker_model, bias = model_dict[model_label]
-        # bias = int(float(fs) * bias)
-        # confined_range = [current_P, R_pos]
-        # current_Ponset = RunWalkerModel(walker_model, R_pos + bias, confined_range)
+        model_label = 'Poffset'
+        seed_positions_dict[model_label] = list()
+        confined_ranges_dict[model_label] = list()
+
+        for qrs_index, current_P in zip(xrange(batch_qrs_index, min(len(qrs_locations), batch_qrs_index + batch_size)), batch_P_list):
+            seed_position = None
+            confined_range = None
+
+            R_pos = qrs_locations[qrs_index]
+            R_pos = R_pos * 250.0 / fs
+            # Boundaries 
+            left_QRS_bound = 0
+            right_QRS_bound = len(raw_sig)
+            if qrs_index > 0:
+                left_QRS_bound = qrs_locations[qrs_index - 1]
+            if qrs_index + 1 < len(qrs_locations):
+                right_QRS_bound = qrs_locations[qrs_index + 1]
+
+            walker_model, bias = model_dict[model_label]
+            bias = int(float(fs) * bias)
+
+            confined_range = [current_P, R_pos]
+            confined_ranges_dict[model_label].append(confined_range)
+            seed_position = bias + R_pos
+            seed_positions_dict[model_label].append(seed_position)
+            # current_Ponset = RunWalkerModel(walker_model, R_pos + bias, confined_range)
+        # Start testing
+        walker_model, bias = model_dict[model_label]
+        batch_Poffset_list = RunWalkerModel(walker_model, seed_positions_dict[model_label], confined_ranges_dict[model_label])
 
         # # T wave
-        # model_label = 'T'
-        # walker_model, bias = model_dict[model_label]
-        # bias = int(float(fs) * bias)
-        # confined_range = [R_pos, right_QRS_bound]
-        # current_T = RunWalkerModel(walker_model, R_pos + bias, confined_range)
+        model_label = 'T'
+        seed_positions_dict[model_label] = list()
+        confined_ranges_dict[model_label] = list()
 
-        # model_label = 'Tonset'
-        # walker_model, bias = model_dict[model_label]
-        # bias = int(float(fs) * bias)
-        # confined_range = [R_pos, current_T]
-        # current_Tonset = RunWalkerModel(walker_model, R_pos + bias, confined_range)
+        for qrs_index in xrange(batch_qrs_index, min(len(qrs_locations), batch_qrs_index + batch_size)):
+            seed_position = None
+            confined_range = None
 
-        # model_label = 'Toffset'
-        # walker_model, bias = model_dict[model_label]
-        # bias = int(float(fs) * bias)
-        # confined_range = [current_T, right_QRS_bound]
-        # current_Tonset = RunWalkerModel(walker_model, R_pos + bias, confined_range)
+            R_pos = qrs_locations[qrs_index]
+            R_pos = R_pos * 250.0 / fs
+            # Boundaries 
+            left_QRS_bound = 0
+            right_QRS_bound = len(raw_sig)
+            if qrs_index > 0:
+                left_QRS_bound = qrs_locations[qrs_index - 1]
+            if qrs_index + 1 < len(qrs_locations):
+                right_QRS_bound = qrs_locations[qrs_index + 1]
+
+            walker_model, bias = model_dict[model_label]
+            bias = int(float(fs) * bias)
+            confined_range = [R_pos, right_QRS_bound]
+            confined_ranges_dict[model_label].append(confined_range)
+            seed_position = bias + R_pos
+            seed_positions_dict[model_label].append(seed_position)
+        # Start testing
+        walker_model, bias = model_dict[model_label]
+        batch_T_list = RunWalkerModel(walker_model, seed_positions_dict[model_label], confined_ranges_dict[model_label])
+
+
+        # Testing Tonset 
+        model_label = 'Tonset'
+        seed_positions_dict[model_label] = list()
+        confined_ranges_dict[model_label] = list()
+
+        for qrs_index, current_T in zip(xrange(batch_qrs_index, min(len(qrs_locations), batch_qrs_index + batch_size)), batch_T_list):
+            seed_position = None
+            confined_range = None
+
+            R_pos = qrs_locations[qrs_index]
+            R_pos = R_pos * 250.0 / fs
+            # Boundaries 
+            left_QRS_bound = 0
+            right_QRS_bound = len(raw_sig)
+            if qrs_index > 0:
+                left_QRS_bound = qrs_locations[qrs_index - 1]
+            if qrs_index + 1 < len(qrs_locations):
+                right_QRS_bound = qrs_locations[qrs_index + 1]
+            walker_model, bias = model_dict[model_label]
+            bias = int(float(fs) * bias)
+
+            confined_range = [R_pos, current_T]
+            confined_ranges_dict[model_label].append(confined_range)
+            seed_position = bias + R_pos
+            seed_positions_dict[model_label].append(seed_position)
+        # Start testing
+        walker_model, bias = model_dict[model_label]
+        batch_Tonset_list = RunWalkerModel(walker_model, seed_positions_dict[model_label], confined_ranges_dict[model_label])
+
+        # Testing Toffset
+        model_label = 'Toffset'
+        seed_positions_dict[model_label] = list()
+        confined_ranges_dict[model_label] = list()
+
+        for qrs_index, current_T in zip(xrange(batch_qrs_index, min(len(qrs_locations), batch_qrs_index + batch_size)), batch_T_list):
+            seed_position = None
+            confined_range = None
+
+            R_pos = qrs_locations[qrs_index]
+            R_pos = R_pos * 250.0 / fs
+            # Boundaries 
+            left_QRS_bound = 0
+            right_QRS_bound = len(raw_sig)
+            if qrs_index > 0:
+                left_QRS_bound = qrs_locations[qrs_index - 1]
+            if qrs_index + 1 < len(qrs_locations):
+                right_QRS_bound = qrs_locations[qrs_index + 1]
+            walker_model, bias = model_dict[model_label]
+            bias = int(float(fs) * bias)
+
+            confined_range = [current_T, right_QRS_bound]
+            confined_ranges_dict[model_label].append(confined_range)
+            seed_position = bias + R_pos
+            seed_positions_dict[model_label].append(seed_position)
+        # Start testing
+        walker_model, bias = model_dict[model_label]
+        batch_Toffset_list = RunWalkerModel(walker_model, seed_positions_dict[model_label], confined_ranges_dict[model_label])
          
     return testing_results
 
@@ -517,7 +609,7 @@ def Test1():
     qt = QTloader()
     sig = qt.load(record_name)
     raw_sig = sig['sig']
-    raw_sig = raw_sig[0:250 * 20]
+    raw_sig = raw_sig[0:250 * 120]
 
     model_folder = '/home/alex/LabGit/ECG_random_walk/randomwalk/data/Lw3Np4000'
     pattern_file_name = '/home/alex/LabGit/ECG_random_walk/randomwalk/data/Lw3Np4000/random_pattern.json'
