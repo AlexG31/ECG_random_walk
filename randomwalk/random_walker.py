@@ -28,6 +28,9 @@ class RandomWalker(object):
             self.random_forest_config['max_depth'] = 15
         self.random_pattern_file_name = random_pattern_file_name
 
+        # For batch testing.
+        self.position_bucket = list()
+        self.confined_range_bucket = list()
 
     def gaussian_training_sampling(self,
             pos_list,
@@ -197,72 +200,6 @@ class RandomWalker(object):
         feature_extractor = ECGfeatures(raw_signal, configuration_info)
         return feature_extractor
 
-    def testing_walk_extractor_pre(self, feature_extractor,
-            seed_position,
-            iterations =  100,
-            stepsize = 4):
-        '''
-        Start random walk with seed position.
-        Input:
-            ECG signal feature extractor.
-        Output:
-            zip(pos_list, results):
-                walk path & predict probability at each position.
-        '''
-        results = list()
-        pos_list = list()
-        pos_dict = dict()
-        # Benchmarking
-        feature_collecting_time_cost = 0
-        predict_time_cost = 0
-
-        pos = seed_position
-        for pi in xrange(0, iterations):
-            # Boundary
-            if pos < 0:
-                pos = 0
-            elif pos >= len(feature_extractor.signal_in):
-                pos = len(feature_extractor.signal_in) - 1
-
-            pos_list.append(pos)
-
-            if pos not in pos_dict:
-                feature_mat = list()
-
-                start_time = time.time()
-                predict_poslist = list()
-                for current_pos in xrange(pos - stepsize, pos + stepsize + 1):
-                    # Boundary
-                    if current_pos < 0:
-                        current_pos = 0
-                    elif current_pos >= len(feature_extractor.signal_in):
-                        current_pos = len(feature_extractor.signal_in) - 1
-                    predict_poslist.append(current_pos)
-                    feature_vector = feature_extractor.frompos(current_pos)
-                    feature_mat.append(feature_vector)
-                feature_collecting_time_cost += time.time() - start_time
-
-                start_time = time.time()
-                values = self.regressor.predict(feature_mat)
-                predict_time_cost += time.time() - start_time
-
-                for current_pos, value in zip(predict_poslist, values):
-                    pos_dict[current_pos] = value
-                value = pos_dict[pos]
-            else:
-                value = pos_dict[pos]
-            results.append(value)
-
-            # Update next position
-            threshold = (value + 1.0) / 2.0
-            # threshold = self.sigmod_function(threshold)
-            direction = -1.0 if random.ranf() >= threshold else 1.0
-            pos += int(direction * stepsize)
-
-        # print 'Feature collecting time cost: %f secs.' % feature_collecting_time_cost
-        # print 'Prediction time cost %f seconds.' % predict_time_cost
-        return zip(pos_list, results)
-
     def testing_walk_extractor(self, feature_extractor,
             seed_position,
             iterations =  100,
@@ -324,57 +261,133 @@ class RandomWalker(object):
         # print 'Prediction time cost %f seconds.' % predict_time_cost
         return zip(pos_list, results)
 
-    def testing_walk(self, raw_signal, seed_position,
+
+    # Fast testing
+    def prepareTestSample(self, seed_position, confined_range = None):
+        '''Prepare sample for batch testing.'''
+        self.position_bucket.append(seed_position)
+        self.confined_range_bucket.append(confined_range)
+
+    def runPreparedTesting(self,
+            feature_extractor,
             iterations =  100,
-            stepsize = 4):
+            stepsize = 4,
+            ):
+        '''Start prepared batch testing. Clear prepare bucket afterwards.
+        Returns:
+            path_list
+            scores_list
         '''
-        Start random walk with seed position.
-        Input:
-            ECG signal.
-        Output:
-            zip(pos_list, results):
-                walk path & predict probability at each position.
-        '''
-        if len(raw_signal) == 0:
-            raise Exception('Empty testing signal!')
+        if len(self.position_bucket) == 0:
+            return list()
 
-        configuration_info = self.get_configuration()
-        start_time = time.time()
-        feature_extractor = ECGfeatures(raw_signal, configuration_info)
-        print 'feature extractor time cost: %f s.' % (time.time() - start_time)
+        
+        # For scores of bucket elements
+        scores_list = [list(), ] * len(self.position_bucket)
 
-        results = list()
-        pos_list = list()
+        # For path of bucket elements
+        path = list()
+        path_list = list()
+        for ind in xrange(0, len(self.position_bucket)):
+            path_list.append(list())
+
+        # For tested position hash
         pos_dict = dict()
 
-        pos = seed_position
-        start_time = time.time()
+        # Benchmarking
+        feature_collecting_time_cost = 0
+        predict_time_cost = 0
+
         for pi in xrange(0, iterations):
-            # Boundary
-            if pos < 0:
-                pos = 0
-            elif pos >= len(raw_signal):
-                pos = len(raw_signal) - 1
+            # List of pair (pos_to_test, bucket_index)
+            prepare_test_info = list()
+            scores = list()
 
-            pos_list.append(pos)
+            # print 'self.position_bucket:', self.position_bucket
+            for bucket_index in xrange(0, len(self.position_bucket)):
+                pos = self.position_bucket[bucket_index]
+                confined_range = self.confined_range_bucket[bucket_index]
+                # print '[%d] pos %d, range(%d, %d)' % (bucket_index, pos, confined_range[0], confined_range[1])
 
-            if pos not in pos_dict:
-                feature_vector = np.array(feature_extractor.frompos(pos))
-                feature_vector = feature_vector.reshape(1, -1)
-                value = self.regressor.predict(feature_vector)
-                pos_dict[pos] = value
-            else:
-                value = pos_dict[pos]
-            results.append(value)
+                # Boundary
+                if pos < 0:
+                    pos = 0
+                elif pos >= len(feature_extractor.signal_in):
+                    pos = len(feature_extractor.signal_in) - 1
+                # confined range
+                if confined_range is not None:
+                    if pos > confined_range[1]:
+                        pos = confined_range[1]
+                    elif pos < confined_range[0]:
+                        pos = confined_range[0]
 
-            # Update next position
-            threshold = (value + 1.0) / 2.0
-            # threshold = self.sigmod_function(threshold)
-            direction = -1.0 if random.ranf() >= threshold else 1.0
-            pos += int(direction * stepsize)
-        print 'Iteration time cost: %f s.' % (time.time() - start_time)
+                path_list[bucket_index].append(pos)
 
-        return zip(pos_list, results)
+                # Prepare for testing
+                if pos not in pos_dict:
+                    prepare_test_info.append((pos, bucket_index))
+                    scores.append(None)
+                    # feature_vector = np.array(feature_extractor.frompos(pos))
+                    # feature_vector = feature_vector.reshape(1, -1)
+                    # feature_collecting_time_cost += time.time() - start_time
+                    # start_time = time.time()
+                    # value = self.regressor.predict(feature_vector)
+                    # predict_time_cost += time.time() - start_time
+                    # pos_dict[pos] = value
+                else:
+                    value = pos_dict[pos]
+                    scores.append(value)
+
+            # print 'prepare_test_info:', prepare_test_info
+            # print 'scores:', scores 
+            # print 'path:', zip(*path_list)[-1]
+            # pdb.set_trace()
+            # Collecting features
+            feature_mat = list()
+            for pos, bucket_index in prepare_test_info:
+                feature_vector = feature_extractor.frompos(pos)
+                # feature_vector = np.array(feature_extractor.frompos(pos))
+                # feature_vector = feature_vector.reshape(1, -1)
+                feature_mat.append(feature_vector)
+            if len(feature_mat) > 0:
+                # Start random forest testing
+                tested_scores = self.regressor.predict(feature_mat)
+                test_result_info = zip(prepare_test_info, tested_scores)
+                for test_info_element, tested_score in test_result_info:
+                    pos, bucket_index = test_info_element
+                    scores[bucket_index] = tested_score
+                    pos_dict[pos] = tested_score
+            
+            # Add to scores_list
+            scores_list = zip(scores_list, scores)
+
+            # Update seed_positions for next round
+            for bucket_index in xrange(0, len(self.position_bucket)):
+                score = scores[bucket_index]
+                pos = self.position_bucket[bucket_index]
+                confined_range = self.confined_range_bucket[bucket_index]
+
+                # Update next position
+                threshold = (score + 1.0) / 2.0
+                # threshold = self.sigmod_function(threshold)
+                direction = -1.0 if random.ranf() >= threshold else 1.0
+                pos += int(direction * stepsize)
+
+
+                # Next position confined range
+                if confined_range is not None:
+                    if pos > confined_range[1]:
+                        pos = confined_range[1]
+                    elif pos < confined_range[0]:
+                        pos = confined_range[0]
+
+                self.position_bucket[bucket_index] = pos
+
+        # Clear data
+        self.position_bucket = list()
+        self.confined_range_bucket = list()
+
+        return (path_list, scores_list)
 
 
 def Test1():
