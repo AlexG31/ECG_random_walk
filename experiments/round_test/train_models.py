@@ -175,7 +175,7 @@ def randomTraining(root_folder = 'models/round1', num_training = 75,random_patte
         json.dump(training_list, fout, indent = 4)
     for target_label in label_list:
         model_file_name = os.path.join(root_folder, '%s.mdl' % target_label)
-        # TrainingModels(target_label, model_file_name, training_list, random_pattern_path = random_pattern_path)
+        TrainingModels(target_label, model_file_name, training_list, random_pattern_path = random_pattern_path)
 
     # Testing
     testing_list = list(set(qt.getreclist()) - set(training_list))

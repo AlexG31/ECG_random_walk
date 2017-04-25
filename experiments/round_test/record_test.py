@@ -131,8 +131,8 @@ def RoundTesting(saveresultpath, testinglist, model_folder = '/home/alex/LabGit/
 
     
     # Testing
-    from randomwalk.test_api import GetModels
-    from randomwalk.test_api import Testing
+    from test_api import GetModels
+    from test_api import Testing
     # pattern_filename = os.path.join(os.path.dirname(saveresultpath), 'randrel.json')
     
     
@@ -148,7 +148,7 @@ def RoundTesting(saveresultpath, testinglist, model_folder = '/home/alex/LabGit/
         time_cost = time.time() - start_time
 
         with open(os.path.join(saveresultpath, '%s.json' % record_name), 'w') as fout:
-            json.dump(results, fout)
+            json.dump(results, fout, indent = 4)
             print 'Testing time %f s, data time %f s.' % (time_cost, len(raw_sig) / 250.0)
 
 
