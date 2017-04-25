@@ -127,11 +127,12 @@ class ECGfeatures:
         windowed_matrix = []
         
         # Adding time-domain windowed signal.
-        windowed_matrix.append(self.getWindowedSignal(position,
-            self.rawsig,
-            fixed_window_length))
+        # windowed_matrix.append(self.getWindowedSignal(position,
+            # self.rawsig,
+            # fixed_window_length))
+
         # Apply the window in each level of swt coefficients.
-        for detail_coefficients in self.cDlist[1:]:
+        for detail_coefficients in self.cDlist:
             windowed_matrix.append(self.getWindowedSignal(position,
                 detail_coefficients,
                 fixed_window_length))
@@ -182,7 +183,7 @@ class ECGfeatures:
         with open(self.random_relation_path_, 'r') as fin:
             wt_pair_list = json.load(fin)
 
-        for signal, pair_list in zip(windowed_matrix[1:],wt_pair_list):
+        for signal, pair_list in zip(windowed_matrix, wt_pair_list):
             fv = [signal[x[0]] - signal[x[1]] for x in pair_list]
             features.extend(fv)
             fv = [abs(signal[x[0]] - signal[x[1]]) for x in pair_list]

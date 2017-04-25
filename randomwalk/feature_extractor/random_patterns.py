@@ -122,13 +122,13 @@ def RefreshRswtPairs(configure, result_file_name):
     totally_random_pair_number = configure['totally_random_pair_number']
 
     # Why divide by 2? The pairs' both diff&abs are added to feature vector,
-    pair_number_per_layer = total_pair_number / (wt_level - 1.0) / 2.0
+    pair_number_per_layer = total_pair_number / (wt_level) / 2.0
     pair_number_per_layer = int(pair_number_per_layer)
 
     totally_random_pair_number_per_layer = int(
-            totally_random_pair_number / (wt_level - 1) / 2.0)
+            totally_random_pair_number / (wt_level) / 2.0)
 
-    for level_index in xrange(0, wt_level - 1):
+    for level_index in xrange(0, wt_level):
         # Random Generated Pairs
         rel = []
         rel = random.sample(Window_Pair_Generator(fixed_window_length),
