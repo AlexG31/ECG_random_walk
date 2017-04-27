@@ -65,7 +65,7 @@ class RandomWalker(object):
         conf = dict(
                 fs = 250,
                 winlen_ratio_to_fs = 3,
-                WT_LEVEL = 6
+                WT_LEVEL = 9
                 )
 
         if self.random_pattern_file_name is not None:

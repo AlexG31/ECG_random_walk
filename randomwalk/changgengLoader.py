@@ -86,3 +86,14 @@ class ECGLoader(object):
         raw_sig = np.squeeze(matdata[leadname])
 
         return [raw_sig, diagnosis_text, mat_file_name, dlist['II_label_pos']['P']]
+
+if __name__ == '__main__':
+    ecg = ECGLoader(1,1)
+    for record_ID in ecg.P_faillist:
+        raw_sig = ecg.load(record_ID)
+        raw_sig = list(raw_sig[0])
+        with open('./%d.json' % record_ID, 'w') as fout:
+            plt.plot(raw_sig)
+            plt.title('%d' % record_ID)
+            plt.show()
+            json.dump(raw_sig, fout, indent = 4)

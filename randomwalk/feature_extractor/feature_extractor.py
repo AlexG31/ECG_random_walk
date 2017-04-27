@@ -17,8 +17,6 @@ import array
 
 
 
-EPS = 1e-6
-
 class ECGfeatures:
     '''Collect ECG feature with SWT.
 
@@ -30,7 +28,7 @@ class ECGfeatures:
                 self,
                 rawsig,
                 configuration_info,
-                wavelet = 'db6',
+                wavelet = 'db2',
             ):
         '''
         Inputs:
@@ -173,7 +171,7 @@ class ECGfeatures:
         Ampmax = max(windowed_ecg)
         Ampmin = min(windowed_ecg)
         sig_height = float(Ampmax-Ampmin)
-        if sig_height <= EPS:
+        if sig_height <= 1e-6:
             sig_height = 1
         windowed_matrix = [[(val-Ampmin)/sig_height for val in signal]
                 for signal in windowed_matrix]

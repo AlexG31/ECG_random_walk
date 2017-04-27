@@ -1,5 +1,5 @@
 {
-    "WT_LEVEL": 8,
+    "WT_LEVEL": 9,
     "ParallelTesting": "False", 
     "QTtest": "FastTest", 
     "LeadNumber":0,
@@ -9,8 +9,8 @@
         "swt-paper-8"
     ], 
     "Tree_Max_Depth": null, 
-    "WTrandselfeaturenumber_apprx": 3000, 
-    "totally_random_pair_number": 1000,
+    "WTrandselfeaturenumber_apprx": 5000, 
+    "totally_random_pair_number": 2000,
     "Wavelet_type": "gswt", 
     "feature_type": "wavelet", 
     "fs": 250, 

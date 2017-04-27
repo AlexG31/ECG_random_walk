@@ -175,7 +175,7 @@ def TrainingModels_Changgeng(target_label, model_file_name):
                     continue
                 CP_marks.extend(zip(poslist, [target_label,] * len(poslist)))
             
-        sig = ecg.load(record_ind)
+        sig = ecg.load(record_name)
 
         walker.collect_training_data(sig[0], CP_marks)
     print 'random forest start training(%s)...' % target_label

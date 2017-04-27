@@ -130,7 +130,7 @@ if __name__ == '__main__':
     label_list = ['P', 'Ponset', 'Poffset',
             'T', 'Toffset',
             'Ronset', 'R', 'Roffset']
-    root_folder = 'data/betterWT'
+    root_folder = 'data/db2WT'
     # Refresh training list
     num_training = 105
     trianing_list = list()
