@@ -57,6 +57,79 @@ def getCwtRange(coef, y, level = 20):
     return P_point_list
 
 
+def getWaveRange(coef, y):
+    wave_ranges = getCwtRange(coef, y, level = 30)
+    # wave_ranges = filter(lambda x:x > 1214 and x < 1500, wave_ranges)
+    for level in [20, 10]:
+
+        current_ranges = getCwtRange(coef, y, level = level)
+        # current_ranges = filter(lambda x:x > 1214 and x < 1500, current_ranges)
+        # print 'wave:', wave_ranges
+        # print 'current:', current_ranges
+
+        # Merge
+        p1 = 0
+        p2 = 0
+        remain_list = list()
+        p2_tail = p2
+        while p2_tail < len(current_ranges):
+            p2_tail += 1
+            if (p2_tail >= len(current_ranges) or
+                    current_ranges[p2_tail] > current_ranges[p2_tail - 1] + 1):
+                # End of group
+                break
+        while p1 < len(wave_ranges) and p2 < len(current_ranges):
+            print 'Run:'
+            print wave_ranges[p1], current_ranges[p2]
+            
+            if wave_ranges[p1] <= current_ranges[p2]:
+                p1_start = p1
+                while p1 < len(wave_ranges):
+                    p1 += 1
+                    if p1 >= len(wave_ranges) or wave_ranges[p1] > wave_ranges[p1 - 1] + 1:
+                        # End of group
+                        break
+                print 'p1 range:', wave_ranges[p1_start], wave_ranges[p1 - 1]
+                print 'matching with p2 range:', current_ranges[p2], current_ranges[p2_tail - 1]
+                if wave_ranges[p1 - 1] >= current_ranges[p2_tail - 1]:
+                    remain_list.append((p1_start, p1))
+                    p2 = p2_tail
+                    p2_tail = p2
+                    while p2_tail < len(current_ranges):
+                        p2_tail += 1
+                        if (p2_tail >= len(current_ranges) or
+                                current_ranges[p2_tail] > current_ranges[p2_tail - 1] + 1):
+                            # End of group
+                            break
+                else:
+                    continue
+            else:
+                print 'p2:', current_ranges[p2], current_ranges[p2_tail - 1]
+                p2 = p2_tail
+                p2_tail = p2
+                while p2_tail < len(current_ranges):
+                    p2_tail += 1
+                    if (p2_tail >= len(current_ranges) or
+                            current_ranges[p2_tail] > current_ranges[p2_tail - 1] + 1):
+                        # End of group
+                        break
+            # pdb.set_trace()
+
+        print remain_list
+        merge_ranges = list()
+        for start,end in remain_list:
+            merge_ranges.extend(wave_ranges[start:end])
+        wave_ranges = merge_ranges
+    return wave_ranges
+                
+
+
+                    
+            
+            
+        
+        
+    
 def swt_show():
     record_ID = '1269'
     y = loadChanggeng(record_ID)
@@ -105,7 +178,7 @@ def swt_show():
 
     plt.figure(2)
     # plt.plot(raw_sig, 'k', lw = 2, alpha = 1)
-    poslist = getCwtRange(coef, y, level = 30)
+    poslist = getWaveRange(coef, y)
     amplist = [original_ecg[x] for x in poslist]
     plt.plot(original_ecg, 'b', lw = 2, alpha = 1)
     plt.plot(poslist, amplist, 'ro', markersize = 12, alpha = 0.5)

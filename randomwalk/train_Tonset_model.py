@@ -139,7 +139,7 @@ def TrainingModels(target_label, model_file_name, training_list):
 
 
 if __name__ == '__main__':
-    root_folder = 'data/Lw3Np4000'
+    root_folder = 'data/Lw3Np4000/improved'
     # Refresh training list
     num_training = 105
     trianing_list = list()
