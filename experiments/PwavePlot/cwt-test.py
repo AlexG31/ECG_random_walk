@@ -188,7 +188,91 @@ def swt_show(record_ID = '1269'):
     plt.show() 
 
 
+def doCMT(raw_sig, annots, figure_title = 'ecg'):
+    '''Processing ecg with CWT Multiscale Thresholding method.'''
+    y = raw_sig[:]
+    original_ecg = raw_sig[:]
+
+    y = removeQRS(y, annots)
+    coef, freqs=pywt.cwt(y,np.arange(1,32),'mexh')
+
+    coef_shape = coef.shape
+    # Get P magnify ranges
+    P_point_list = list()
+    thres = 0.2
+    for ind in xrange(0, len(y)):
+        if coef[-1, ind] > thres:
+            P_point_list.append(ind)
+
+
+
+    x_range = (1000, 1640)
+    # y = y[x_range[0]:x_range[1]]
+    # coef = coef[x_range[0]:x_range[1]]
+
+    # fig, ax = plt.subplots(2,1)
+
+    # amplist = [y[x] for x in P_point_list]
+    # ax[0].plot(y)
+    # ax[0].plot(P_point_list, amplist, 'ro')
+
+    # amplify(coef, y, ax, level = 20, color = (0.1, 0.2,0.3))
+    # amplify(coef, y, ax, level = 10, color = (0.9, 0.3,0.8))
+    # # amplify
+    # for pos in P_point_list:
+        # y[pos] *= 10.0
+        # raw_sig[pos] *= 5.0
+    # ax[0].plot(y, 'y', lw = 4, alpha = 0.3)
+
+
+
+    # ax[0].set_xlim(x_range)
+    # ax[1].matshow(coef, cmap = plt.gray()) 
+    # # ax[1].set_clip_box(((0,0),(9,19)))
+    # ax[1].set_xlim(x_range)
+    # plt.legend(numpoints = 1)
+
+
+    plt.figure(2)
+    # plt.plot(raw_sig, 'k', lw = 2, alpha = 1)
+    poslist = getWaveRange(coef, y)
+    amplist = [original_ecg[x] for x in poslist]
+    plt.plot(original_ecg, 'b', lw = 2, alpha = 1)
+    plt.plot(poslist, amplist, 'ro', markersize = 12, alpha = 0.5)
+    
+
+    plt.title(figure_title)
+    plt.show() 
+
+
+def viewCWTsignal(raw_sig, fs, figure_title = 'ecg'):
+    '''Processing ecg raw_sig.'''
+
+    # Testing
+    from randomwalk.test_api import GetModels
+    from randomwalk.test_api import Testing
+
+    pattern_filename = '/home/alex/LabGit/ECG_random_walk/randomwalk/data/db2WT/random_pattern.json'
+    model_folder = '/home/alex/LabGit/ECG_random_walk/randomwalk/data/db2WT'
+    models = GetModels(model_folder, pattern_filename)
+    annots = Testing(raw_sig, fs, models)
+
+    doCMT(raw_sig, annots, figure_title = figure_title)
+
+
+
+def viewQT():
+    qt = QTloader()
+    record_list = qt.getreclist()
+    for record_name in record_list:
+        sig = qt.load(record_name)
+        raw_sig = sig['sig'][2000:7000]
+        viewCWTsignal(raw_sig, 250, figure_title = record_name)
+
 if __name__ == '__main__':
+
+    viewQT()
+
     import glob
     
     record_files = glob.glob('/home/alex/LabGit/ECG_random_walk/experiments/PwavePlot/changgeng/*.json')
