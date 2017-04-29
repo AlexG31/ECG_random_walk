@@ -85,14 +85,14 @@ def removeRangesInQRS(wave_ranges, qrs_ranges):
             
             
 
-def getWaveRange(coef, y, qrs_ranges = list(), fs = 250, cwt_levels = [15, 10, 8], width_wiggle_threshold = 7.0 / 250):
+def getWaveRange(coef, y, qrs_ranges = list(), fs = 250, cwt_levels = [15, 10, 8], width_wiggle_threshold = 7.0 / 250, cwt_threshold = 0.1):
     '''Get possible P wave ranges.'''
     
-    wave_ranges = getCwtRange(coef, y, level = cwt_levels[0])
+    wave_ranges = getCwtRange(coef, y, level = cwt_levels[0], thres = cwt_threshold)
     # wave_ranges = filter(lambda x:x > 1214 and x < 1500, wave_ranges)
     for level in cwt_levels[1:]:
 
-        current_ranges = getCwtRange(coef, y, level = level)
+        current_ranges = getCwtRange(coef, y, level = level, thres = cwt_threshold)
 
         # Merge
         p1 = 0
@@ -221,7 +221,7 @@ def swt_show(record_ID = '1269'):
     plt.show() 
 
 
-def doCMT(raw_sig, annots, figure_title = 'ecg'):
+def doCMT(raw_sig, annots, figure_title = 'ecg', cwt_threshold = 0.1):
     '''Processing ecg with CWT Multiscale Thresholding method.'''
     y = raw_sig[:]
     original_ecg = raw_sig[:]
@@ -232,11 +232,11 @@ def doCMT(raw_sig, annots, figure_title = 'ecg'):
 
     coef_shape = coef.shape
     # Get P magnify ranges
-    P_point_list = list()
-    thres = 0.2
-    for ind in xrange(0, len(y)):
-        if coef[-1, ind] > thres:
-            P_point_list.append(ind)
+    # P_point_list = list()
+    # thres = 0.2
+    # for ind in xrange(0, len(y)):
+        # if coef[-1, ind] > thres:
+            # P_point_list.append(ind)
 
 
 
@@ -256,7 +256,7 @@ def doCMT(raw_sig, annots, figure_title = 'ecg'):
     # amplify(coef, y, ax, level = 10, color = (0.9, 0.3,0.8))
     bar_height = 10
     for cwt_level in [15, 10, 8]:
-        poslist = getCwtRange(coef, y, cwt_level)
+        poslist = getCwtRange(coef, y, cwt_level, thres = cwt_threshold)
         p1 = 0
         while p1 < len(poslist):
             p1_start = p1
@@ -279,8 +279,8 @@ def doCMT(raw_sig, annots, figure_title = 'ecg'):
     # ax[0].set_xlim(x_range)
     ax[1].matshow(coef, cmap = plt.gray()) 
     bw_image = coef[:,:]
-    bw_image[bw_image > 0.2] = 1.0
-    bw_image[bw_image <= 0.2] = 0.0
+    bw_image[bw_image > cwt_threshold] = 1.0
+    bw_image[bw_image <= cwt_threshold] = 0.0
     ax[2].matshow(bw_image, cmap = plt.gray()) 
 
     # ax[1].set_clip_box(((0,0),(9,19)))
@@ -290,7 +290,7 @@ def doCMT(raw_sig, annots, figure_title = 'ecg'):
 
     plt.figure(2)
     # plt.plot(raw_sig, 'k', lw = 2, alpha = 1)
-    poslist = getWaveRange(coef, y, qrs_ranges = qrs_ranges)
+    poslist = getWaveRange(coef, y, qrs_ranges = qrs_ranges, cwt_threshold = cwt_threshold)
     amplist = [original_ecg[x] for x in poslist]
     plt.plot(original_ecg, 'b', lw = 2, alpha = 1)
     plt.plot(poslist, amplist, 'ro', markersize = 12, alpha = 0.5)
@@ -313,16 +313,18 @@ def viewCWTsignal(raw_sig, fs, figure_title = 'ecg'):
     models = GetModels(model_folder, pattern_filename)
     annots = Testing(raw_sig, fs, models)
 
-    doCMT(raw_sig, annots, figure_title = figure_title)
+    doCMT(raw_sig, annots, figure_title = figure_title, cwt_threshold = 0)
 
 
 
 def viewQT():
     qt = QTloader()
     record_list = qt.getreclist()
-    index = 0
-    for record_name in record_list[:]:
+    index = 7
+    for record_name in record_list[index:]:
         print 'record index:', index
+        # if record_name != 'sele0612':
+            # continue
         sig = qt.load(record_name)
         raw_sig = sig['sig'][2000:7000]
         viewCWTsignal(raw_sig, 250, figure_title = record_name)
