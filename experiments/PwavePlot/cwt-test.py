@@ -47,10 +47,9 @@ def amplify(coef, y, ax, level = 20, color = 'r'):
     ax[0].plot(P_point_list, amplist, 'o', markerfacecolor = color, alpha = 0.8, label = str(level))
 
 
-def getCwtRange(coef, y, level = 20):
+def getCwtRange(coef, y, level = 20, thres = 0.2):
     coef_shape = coef.shape
     P_point_list = list()
-    thres = 0.2
     for ind in xrange(0, coef_shape[1]):
         if coef[level, ind] > thres:
             P_point_list.append(ind)
@@ -206,11 +205,13 @@ def doCMT(raw_sig, annots, figure_title = 'ecg'):
 
 
 
-    x_range = (1000, 1640)
-    # y = y[x_range[0]:x_range[1]]
-    # coef = coef[x_range[0]:x_range[1]]
+    # x_range = (1000, 1640)
 
-    # fig, ax = plt.subplots(2,1)
+    # y = y[x_range[0]:x_range[1]]
+
+    # coef = coef[:, x_range[0]:x_range[1]]
+
+    fig, ax = plt.subplots(2,1)
 
     # amplist = [y[x] for x in P_point_list]
     # ax[0].plot(y)
@@ -218,17 +219,31 @@ def doCMT(raw_sig, annots, figure_title = 'ecg'):
 
     # amplify(coef, y, ax, level = 20, color = (0.1, 0.2,0.3))
     # amplify(coef, y, ax, level = 10, color = (0.9, 0.3,0.8))
-    # # amplify
+    bar_height = 10
+    for cwt_level in [30, 20, 10]:
+        poslist = getCwtRange(coef, y, cwt_level)
+        p1 = 0
+        while p1 < len(poslist):
+            p1_start = p1
+            while p1 < len(poslist):
+                p1 += 1
+                if p1 >= len(poslist) or poslist[p1] > poslist[p1 - 1] + 1:
+                    # End of group
+                    break
+            width = 1 + poslist[p1 - 1] - poslist[p1_start]
+            left = poslist[p1_start]
+            ax[0].bar(left, bar_height, width = width, alpha = 0.4)
+        bar_height += 10
+    # amplify
     # for pos in P_point_list:
         # y[pos] *= 10.0
         # raw_sig[pos] *= 5.0
-    # ax[0].plot(y, 'y', lw = 4, alpha = 0.3)
-
+    ax[0].plot(y, 'k', lw = 4, alpha = 0.3)
 
 
     # ax[0].set_xlim(x_range)
-    # ax[1].matshow(coef, cmap = plt.gray()) 
-    # # ax[1].set_clip_box(((0,0),(9,19)))
+    ax[1].matshow(coef, cmap = plt.gray()) 
+    # ax[1].set_clip_box(((0,0),(9,19)))
     # ax[1].set_xlim(x_range)
     # plt.legend(numpoints = 1)
 
@@ -241,6 +256,7 @@ def doCMT(raw_sig, annots, figure_title = 'ecg'):
     plt.plot(poslist, amplist, 'ro', markersize = 12, alpha = 0.5)
     
 
+    # plt.bar(823, 50, width = 40, color = 'y', alpha = 0.3)
     plt.title(figure_title)
     plt.show() 
 
