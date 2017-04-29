@@ -55,6 +55,20 @@ def Pwave(record_ID = '42736'):
 
 def removeQRS(raw_sig, annots):
     '''Remove QRS regions in signal.'''
+    QRS_ranges = getQRSRanges(annots)
+
+    data = raw_sig[:]
+    # Remove QRS
+    for qrs_on, qrs_off in QRS_ranges:
+        qrs_on = int(qrs_on)
+        qrs_off = int(qrs_off)
+        for ind in xrange(qrs_on, qrs_off):
+            data[ind] = raw_sig[qrs_on] + (raw_sig[qrs_off] - raw_sig[qrs_on]) * (ind - qrs_on) / (qrs_off - qrs_on)
+
+    return data
+
+def getQRSRanges(annots):
+    '''Remove QRS regions in signal.'''
     QRS_ranges = list()
 
     annots.sort(key = lambda x:x[0], reverse = False)
@@ -68,15 +82,7 @@ def removeQRS(raw_sig, annots):
             if annots[ind + 1][1] == 'Roffset':
                 QRS_ranges.append((pos, annots[ind + 1][0]))
 
-    data = raw_sig[:]
-    # Remove QRS
-    for qrs_on, qrs_off in QRS_ranges:
-        qrs_on = int(qrs_on)
-        qrs_off = int(qrs_off)
-        for ind in xrange(qrs_on, qrs_off):
-            data[ind] = raw_sig[qrs_on] + (raw_sig[qrs_off] - raw_sig[qrs_on]) * (ind - qrs_on) / (qrs_off - qrs_on)
-
-    return data
+    return QRS_ranges
     
 def Pwave_noQRS(recID = 6655):
     '''Plot P wave swt coefs.'''

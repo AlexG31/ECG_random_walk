@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from QTdata.loadQTdata import QTloader
 
-from swt_plot import removeQRS
+from swt_plot import removeQRS, getQRSRanges
 
 def loadChanggeng(recID = '42736'):
     signal_file = './changgeng/%s.json' % recID
@@ -47,7 +47,7 @@ def amplify(coef, y, ax, level = 20, color = 'r'):
     ax[0].plot(P_point_list, amplist, 'o', markerfacecolor = color, alpha = 0.8, label = str(level))
 
 
-def getCwtRange(coef, y, level = 20, thres = 0.2):
+def getCwtRange(coef, y, level = 20, thres = 0.1):
     coef_shape = coef.shape
     P_point_list = list()
     for ind in xrange(0, coef_shape[1]):
@@ -56,15 +56,43 @@ def getCwtRange(coef, y, level = 20, thres = 0.2):
     return P_point_list
 
 
-def getWaveRange(coef, y):
-    wave_ranges = getCwtRange(coef, y, level = 30)
+def removeRangesInQRS(wave_ranges, qrs_ranges):
+    p1 = 0
+    p2 = 0
+    
+    remain_ranges = list()
+    while p1 < len(wave_ranges) and p2 < len(qrs_ranges):
+        # No common region
+        if (wave_ranges[p1][1] <= qrs_ranges[p2][0] or
+                wave_ranges[p1][0] >= qrs_ranges[p2][1]):
+            remain_ranges.append(wave_ranges[p1])
+        else:
+            left = max(wave_ranges[p1][0], qrs_ranges[p2][0])
+            right = min(wave_ranges[p1][1], qrs_ranges[p2][1])
+
+            common_width = max(0, right - left)
+            if (wave_ranges[p1][1] - wave_ranges[p1][0] <= 1 or
+                    common_width / float(wave_ranges[p1][1] - wave_ranges[p1][0]) >= 0.5):
+                pass
+            else:
+                remain_ranges.append(wave_ranges[p1])
+        if wave_ranges[p1][0] < qrs_ranges[p2][0]:
+            p1 += 1
+        else:
+            p2 += 1
+    return remain_ranges
+            
+            
+            
+
+def getWaveRange(coef, y, qrs_ranges = list(), fs = 250, cwt_levels = [15, 10, 8], width_wiggle_threshold = 7.0 / 250):
+    '''Get possible P wave ranges.'''
+    
+    wave_ranges = getCwtRange(coef, y, level = cwt_levels[0])
     # wave_ranges = filter(lambda x:x > 1214 and x < 1500, wave_ranges)
-    for level in [20, 10]:
+    for level in cwt_levels[1:]:
 
         current_ranges = getCwtRange(coef, y, level = level)
-        # current_ranges = filter(lambda x:x > 1214 and x < 1500, current_ranges)
-        # print 'wave:', wave_ranges
-        # print 'current:', current_ranges
 
         # Merge
         p1 = 0
@@ -88,9 +116,9 @@ def getWaveRange(coef, y):
                     if p1 >= len(wave_ranges) or wave_ranges[p1] > wave_ranges[p1 - 1] + 1:
                         # End of group
                         break
-                print 'p1 range:', wave_ranges[p1_start], wave_ranges[p1 - 1]
-                print 'matching with p2 range:', current_ranges[p2], current_ranges[p2_tail - 1]
-                if wave_ranges[p1 - 1] >= current_ranges[p2_tail - 1]:
+
+                # Merging ranges in different level
+                if wave_ranges[p1 - 1] >= current_ranges[p2_tail - 1] - fs * width_wiggle_threshold:
                     remain_list.append((p1_start, p1))
                     p2 = p2_tail
                     p2_tail = p2
@@ -100,10 +128,10 @@ def getWaveRange(coef, y):
                                 current_ranges[p2_tail] > current_ranges[p2_tail - 1] + 1):
                             # End of group
                             break
+                # Range1 cannot cover range2, skipping range1
                 else:
                     continue
             else:
-                print 'p2:', current_ranges[p2], current_ranges[p2_tail - 1]
                 p2 = p2_tail
                 p2_tail = p2
                 while p2_tail < len(current_ranges):
@@ -112,12 +140,17 @@ def getWaveRange(coef, y):
                             current_ranges[p2_tail] > current_ranges[p2_tail - 1] + 1):
                         # End of group
                         break
-            # pdb.set_trace()
 
-        print remain_list
-        merge_ranges = list()
+        # Merge with qrs ranges, remove ranges in qrs
+        pos_ranges = list()
         for start,end in remain_list:
-            merge_ranges.extend(wave_ranges[start:end])
+            pos_ranges.append((wave_ranges[start], wave_ranges[end - 1]))
+        wave_ranges = pos_ranges
+        wave_ranges = removeRangesInQRS(wave_ranges, qrs_ranges)
+        
+        merge_ranges = list()
+        for start,end in wave_ranges:
+            merge_ranges.extend(xrange(start,end))
         wave_ranges = merge_ranges
     return wave_ranges
                 
@@ -136,6 +169,7 @@ def swt_show(record_ID = '1269'):
     original_ecg = raw_sig[:]
     annots = loadChanggengAnnots(record_ID)
     y = removeQRS(y, annots)
+
     coef, freqs=pywt.cwt(y,np.arange(1,32),'mexh')
 
     coef_shape = coef.shape
@@ -193,7 +227,8 @@ def doCMT(raw_sig, annots, figure_title = 'ecg'):
     original_ecg = raw_sig[:]
 
     y = removeQRS(y, annots)
-    coef, freqs=pywt.cwt(y,np.arange(1,32),'mexh')
+    qrs_ranges = getQRSRanges(annots)
+    coef, freqs=pywt.cwt(y,np.arange(1, 102),'mexh')
 
     coef_shape = coef.shape
     # Get P magnify ranges
@@ -211,7 +246,7 @@ def doCMT(raw_sig, annots, figure_title = 'ecg'):
 
     # coef = coef[:, x_range[0]:x_range[1]]
 
-    fig, ax = plt.subplots(2,1)
+    fig, ax = plt.subplots(3,1)
 
     # amplist = [y[x] for x in P_point_list]
     # ax[0].plot(y)
@@ -220,7 +255,7 @@ def doCMT(raw_sig, annots, figure_title = 'ecg'):
     # amplify(coef, y, ax, level = 20, color = (0.1, 0.2,0.3))
     # amplify(coef, y, ax, level = 10, color = (0.9, 0.3,0.8))
     bar_height = 10
-    for cwt_level in [30, 20, 10]:
+    for cwt_level in [15, 10, 8]:
         poslist = getCwtRange(coef, y, cwt_level)
         p1 = 0
         while p1 < len(poslist):
@@ -243,6 +278,11 @@ def doCMT(raw_sig, annots, figure_title = 'ecg'):
 
     # ax[0].set_xlim(x_range)
     ax[1].matshow(coef, cmap = plt.gray()) 
+    bw_image = coef[:,:]
+    bw_image[bw_image > 0.2] = 1.0
+    bw_image[bw_image <= 0.2] = 0.0
+    ax[2].matshow(bw_image, cmap = plt.gray()) 
+
     # ax[1].set_clip_box(((0,0),(9,19)))
     # ax[1].set_xlim(x_range)
     # plt.legend(numpoints = 1)
@@ -250,7 +290,7 @@ def doCMT(raw_sig, annots, figure_title = 'ecg'):
 
     plt.figure(2)
     # plt.plot(raw_sig, 'k', lw = 2, alpha = 1)
-    poslist = getWaveRange(coef, y)
+    poslist = getWaveRange(coef, y, qrs_ranges = qrs_ranges)
     amplist = [original_ecg[x] for x in poslist]
     plt.plot(original_ecg, 'b', lw = 2, alpha = 1)
     plt.plot(poslist, amplist, 'ro', markersize = 12, alpha = 0.5)
@@ -280,15 +320,16 @@ def viewCWTsignal(raw_sig, fs, figure_title = 'ecg'):
 def viewQT():
     qt = QTloader()
     record_list = qt.getreclist()
-    for record_name in record_list:
+    index = 0
+    for record_name in record_list[:]:
+        print 'record index:', index
         sig = qt.load(record_name)
         raw_sig = sig['sig'][2000:7000]
         viewCWTsignal(raw_sig, 250, figure_title = record_name)
 
-if __name__ == '__main__':
+        index += 1
 
-    viewQT()
-
+def viewChanggeng():
     import glob
     
     record_files = glob.glob('/home/alex/LabGit/ECG_random_walk/experiments/PwavePlot/changgeng/*.json')
@@ -297,3 +338,7 @@ if __name__ == '__main__':
         record_ID = record_file_name.split('.')[0]
         print 'Record ID:', record_ID
         swt_show(record_ID = record_ID)
+    
+if __name__ == '__main__':
+    viewQT()
+
