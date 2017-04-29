@@ -1,4 +1,4 @@
-import pywt, pdb, json
+import pywt, pdb, json, os, sys
 import numpy as np
 import matplotlib.pyplot as plt
 from QTdata.loadQTdata import QTloader
@@ -130,8 +130,8 @@ def getWaveRange(coef, y):
         
         
     
-def swt_show():
-    record_ID = '1269'
+def swt_show(record_ID = '1269'):
+    
     y = loadChanggeng(record_ID)
     raw_sig = y[:]
     original_ecg = raw_sig[:]
@@ -153,27 +153,27 @@ def swt_show():
     # y = y[x_range[0]:x_range[1]]
     # coef = coef[x_range[0]:x_range[1]]
 
-    fig, ax = plt.subplots(2,1)
+    # fig, ax = plt.subplots(2,1)
 
-    amplist = [y[x] for x in P_point_list]
-    ax[0].plot(y)
-    ax[0].plot(P_point_list, amplist, 'ro')
+    # amplist = [y[x] for x in P_point_list]
+    # ax[0].plot(y)
+    # ax[0].plot(P_point_list, amplist, 'ro')
 
-    amplify(coef, y, ax, level = 20, color = (0.1, 0.2,0.3))
-    amplify(coef, y, ax, level = 10, color = (0.9, 0.3,0.8))
-    # amplify
-    for pos in P_point_list:
-        y[pos] *= 10.0
-        raw_sig[pos] *= 5.0
-    ax[0].plot(y, 'y', lw = 4, alpha = 0.3)
+    # amplify(coef, y, ax, level = 20, color = (0.1, 0.2,0.3))
+    # amplify(coef, y, ax, level = 10, color = (0.9, 0.3,0.8))
+    # # amplify
+    # for pos in P_point_list:
+        # y[pos] *= 10.0
+        # raw_sig[pos] *= 5.0
+    # ax[0].plot(y, 'y', lw = 4, alpha = 0.3)
 
 
 
-    ax[0].set_xlim(x_range)
-    ax[1].matshow(coef, cmap = plt.gray()) 
-    # ax[1].set_clip_box(((0,0),(9,19)))
-    ax[1].set_xlim(x_range)
-    plt.legend(numpoints = 1)
+    # ax[0].set_xlim(x_range)
+    # ax[1].matshow(coef, cmap = plt.gray()) 
+    # # ax[1].set_clip_box(((0,0),(9,19)))
+    # ax[1].set_xlim(x_range)
+    # plt.legend(numpoints = 1)
 
 
     plt.figure(2)
@@ -184,8 +184,16 @@ def swt_show():
     plt.plot(poslist, amplist, 'ro', markersize = 12, alpha = 0.5)
     
 
+    plt.title(record_ID)
     plt.show() 
 
 
 if __name__ == '__main__':
-    swt_show()
+    import glob
+    
+    record_files = glob.glob('/home/alex/LabGit/ECG_random_walk/experiments/PwavePlot/changgeng/*.json')
+    for record_file_path in record_files:
+        record_file_name = os.path.split(record_file_path)[-1]
+        record_ID = record_file_name.split('.')[0]
+        print 'Record ID:', record_ID
+        swt_show(record_ID = record_ID)
