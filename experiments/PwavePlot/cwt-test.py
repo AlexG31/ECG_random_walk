@@ -57,6 +57,12 @@ def getCwtRange(coef, y, level = 20, thres = 0.1):
 
 
 def removeRangesInQRS(wave_ranges, qrs_ranges):
+    # To int
+    tmp_ranges = list()
+    for left, right in qrs_ranges:
+        tmp_ranges.append((int(left), int(right)))
+    qrs_ranges = tmp_ranges
+
     p1 = 0
     p2 = 0
     
@@ -75,7 +81,19 @@ def removeRangesInQRS(wave_ranges, qrs_ranges):
                     common_width / float(wave_ranges[p1][1] - wave_ranges[p1][0]) >= 0.5):
                 pass
             else:
-                remain_ranges.append(wave_ranges[p1])
+                print 'Skipping across QRS'
+
+                # Remain left or right
+                # if wave_ranges[p1][0] >= qrs_ranges[p2][0]:
+                    # remain_ranges.append((qrs_ranges[p2][1],wave_ranges[p1][1]))
+                # elif wave_ranges[p1][1] <= qrs_ranges[p2][1]:
+                    # remain_ranges.append((wave_ranges[p1][0], qrs_ranges[p2][0]))
+                # else:
+                    # cut_range = (qrs_ranges[p2][1],wave_ranges[p1][1])
+                    # if qrs_ranges[p2][0] - wave_ranges[p1][0] > wave_ranges[p1][1] - qrs_ranges[p2][1]:
+                        # cut_range = (wave_ranges[p1][0], qrs_ranges[p2][0])
+                    # remain_ranges.append(cut_range)
+
         if wave_ranges[p1][0] < qrs_ranges[p2][0]:
             p1 += 1
         else:
@@ -242,6 +260,7 @@ def doCMT(raw_sig, annots, figure_title = 'ecg', cwt_threshold = 0.2):
     poslist, T_wave_ranges = getWaveRange(coef, y, qrs_ranges = qrs_ranges, cwt_threshold = cwt_threshold)
     y = removeRanges(noQRS_y, T_wave_ranges)
     coef, freqs=pywt.cwt(y,np.arange(1, 102),'mexh')
+    T_wave_ranges.extend(qrs_ranges)
     P_poslist, P_wave_ranges = getWaveRange(coef, y, qrs_ranges = T_wave_ranges, cwt_threshold = cwt_threshold)
     poslist.extend(P_poslist)
     result_poslist = poslist
@@ -287,7 +306,7 @@ def doCMT(raw_sig, annots, figure_title = 'ecg', cwt_threshold = 0.2):
 
     amplist = [original_ecg[x] for x in result_poslist]
     plt.plot(original_ecg, 'b', lw = 2, alpha = 1)
-    plt.plot(result_poslist, amplist, 'ro', markersize = 12, alpha = 0.5)
+    plt.plot(result_poslist, amplist, 'yo', markersize = 12, alpha = 0.5)
     
 
     # plt.bar(823, 50, width = 40, color = 'y', alpha = 0.3)
@@ -322,7 +341,7 @@ def plotExpertLabels(ax, raw_sig, annots):
             marker = '>'
         else:
             marker = 'o'
-        ax.plot(posList,map(lambda x:raw_sig[int(x)],posList),marker = marker,color = color,linestyle = 'none',markersize = 8,label = label)
+        ax.plot(posList,map(lambda x:raw_sig[int(x)],posList),marker = marker,color = color,linestyle = 'none',markersize = 15,label = label)
     ax.legend(numpoints = 1)
 
 def viewCWTsignal(raw_sig, fs, figure_title = 'ecg'):
@@ -344,7 +363,7 @@ def viewCWTsignal(raw_sig, fs, figure_title = 'ecg'):
 def viewQT():
     qt = QTloader()
     record_list = qt.getreclist()
-    index = 8
+    index = 19
     for record_name in record_list[index:]:
         print 'record index:', index
         # if record_name != 'sele0612':
