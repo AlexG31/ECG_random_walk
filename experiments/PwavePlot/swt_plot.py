@@ -67,6 +67,19 @@ def removeQRS(raw_sig, annots):
 
     return data
 
+def removeRanges(raw_sig, QRS_ranges):
+    '''Remove QRS(or T) regions in signal.'''
+
+    data = raw_sig[:]
+    # Remove QRS
+    for qrs_on, qrs_off in QRS_ranges:
+        qrs_on = int(qrs_on)
+        qrs_off = int(qrs_off)
+        for ind in xrange(qrs_on, qrs_off):
+            data[ind] = raw_sig[qrs_on] + (raw_sig[qrs_off] - raw_sig[qrs_on]) * (ind - qrs_on) / (qrs_off - qrs_on)
+
+    return data
+
 def getQRSRanges(annots):
     '''Remove QRS regions in signal.'''
     QRS_ranges = list()

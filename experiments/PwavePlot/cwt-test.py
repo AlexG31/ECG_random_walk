@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from QTdata.loadQTdata import QTloader
 
-from swt_plot import removeQRS, getQRSRanges
+from swt_plot import removeQRS, getQRSRanges, removeRanges
 
 def loadChanggeng(recID = '42736'):
     signal_file = './changgeng/%s.json' % recID
@@ -148,11 +148,12 @@ def getWaveRange(coef, y, qrs_ranges = list(), fs = 250, cwt_levels = [15, 10, 8
         wave_ranges = pos_ranges
         wave_ranges = removeRangesInQRS(wave_ranges, qrs_ranges)
         
-        merge_ranges = list()
+        poslist = list()
         for start,end in wave_ranges:
-            merge_ranges.extend(xrange(start,end))
-        wave_ranges = merge_ranges
-    return wave_ranges
+            poslist.extend(xrange(start,end))
+        wave_ranges = poslist
+
+    return (wave_ranges, pos_ranges)
                 
 
 
@@ -211,7 +212,7 @@ def swt_show(record_ID = '1269'):
 
     plt.figure(2)
     # plt.plot(raw_sig, 'k', lw = 2, alpha = 1)
-    poslist = getWaveRange(coef, y)
+    poslist, wave_ranges = getWaveRange(coef, y)
     amplist = [original_ecg[x] for x in poslist]
     plt.plot(original_ecg, 'b', lw = 2, alpha = 1)
     plt.plot(poslist, amplist, 'ro', markersize = 12, alpha = 0.5)
@@ -226,34 +227,16 @@ def doCMT(raw_sig, annots, figure_title = 'ecg', cwt_threshold = 0.1):
     y = raw_sig[:]
     original_ecg = raw_sig[:]
 
-    y = removeQRS(y, annots)
     qrs_ranges = getQRSRanges(annots)
+    y = removeRanges(y, qrs_ranges)
+    noQRS_y = y[:]
+
     coef, freqs=pywt.cwt(y,np.arange(1, 102),'mexh')
 
     coef_shape = coef.shape
-    # Get P magnify ranges
-    # P_point_list = list()
-    # thres = 0.2
-    # for ind in xrange(0, len(y)):
-        # if coef[-1, ind] > thres:
-            # P_point_list.append(ind)
-
-
-
-    # x_range = (1000, 1640)
-
-    # y = y[x_range[0]:x_range[1]]
-
-    # coef = coef[:, x_range[0]:x_range[1]]
 
     fig, ax = plt.subplots(3,1)
 
-    # amplist = [y[x] for x in P_point_list]
-    # ax[0].plot(y)
-    # ax[0].plot(P_point_list, amplist, 'ro')
-
-    # amplify(coef, y, ax, level = 20, color = (0.1, 0.2,0.3))
-    # amplify(coef, y, ax, level = 10, color = (0.9, 0.3,0.8))
     bar_height = 10
     for cwt_level in [15, 10, 8]:
         poslist = getCwtRange(coef, y, cwt_level, thres = cwt_threshold)
@@ -290,7 +273,16 @@ def doCMT(raw_sig, annots, figure_title = 'ecg', cwt_threshold = 0.1):
 
     plt.figure(2)
     # plt.plot(raw_sig, 'k', lw = 2, alpha = 1)
-    poslist = getWaveRange(coef, y, qrs_ranges = qrs_ranges, cwt_threshold = cwt_threshold)
+    poslist, T_wave_ranges = getWaveRange(coef, y, qrs_ranges = qrs_ranges, cwt_threshold = cwt_threshold)
+
+    y = removeRanges(noQRS_y, T_wave_ranges)
+    coef, freqs=pywt.cwt(y,np.arange(1, 102),'mexh')
+    P_poslist, P_wave_ranges = getWaveRange(coef, y, qrs_ranges = T_wave_ranges, cwt_threshold = cwt_threshold)
+    # poslist.extend(P_poslist)
+    poslist = P_poslist
+    
+
+
     amplist = [original_ecg[x] for x in poslist]
     plt.plot(original_ecg, 'b', lw = 2, alpha = 1)
     plt.plot(poslist, amplist, 'ro', markersize = 12, alpha = 0.5)
