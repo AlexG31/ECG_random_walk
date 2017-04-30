@@ -222,7 +222,7 @@ def swt_show(record_ID = '1269'):
     plt.show() 
 
 
-def doCMT(raw_sig, annots, figure_title = 'ecg', cwt_threshold = 0.1):
+def doCMT(raw_sig, annots, figure_title = 'ecg', cwt_threshold = 0.2):
     '''Processing ecg with CWT Multiscale Thresholding method.'''
     y = raw_sig[:]
     original_ecg = raw_sig[:]
@@ -236,6 +236,15 @@ def doCMT(raw_sig, annots, figure_title = 'ecg', cwt_threshold = 0.1):
     coef_shape = coef.shape
 
     fig, ax = plt.subplots(3,1)
+
+    
+    # Cut QRS -> cut T
+    poslist, T_wave_ranges = getWaveRange(coef, y, qrs_ranges = qrs_ranges, cwt_threshold = cwt_threshold)
+    y = removeRanges(noQRS_y, T_wave_ranges)
+    coef, freqs=pywt.cwt(y,np.arange(1, 102),'mexh')
+    P_poslist, P_wave_ranges = getWaveRange(coef, y, qrs_ranges = T_wave_ranges, cwt_threshold = cwt_threshold)
+    poslist.extend(P_poslist)
+    result_poslist = poslist
 
     bar_height = 10
     for cwt_level in [15, 10, 8]:
@@ -273,25 +282,48 @@ def doCMT(raw_sig, annots, figure_title = 'ecg', cwt_threshold = 0.1):
 
     plt.figure(2)
     # plt.plot(raw_sig, 'k', lw = 2, alpha = 1)
-    poslist, T_wave_ranges = getWaveRange(coef, y, qrs_ranges = qrs_ranges, cwt_threshold = cwt_threshold)
-
-    y = removeRanges(noQRS_y, T_wave_ranges)
-    coef, freqs=pywt.cwt(y,np.arange(1, 102),'mexh')
-    P_poslist, P_wave_ranges = getWaveRange(coef, y, qrs_ranges = T_wave_ranges, cwt_threshold = cwt_threshold)
-    # poslist.extend(P_poslist)
-    poslist = P_poslist
     
+    plotExpertLabels(plt, original_ecg, annots)
 
-
-    amplist = [original_ecg[x] for x in poslist]
+    amplist = [original_ecg[x] for x in result_poslist]
     plt.plot(original_ecg, 'b', lw = 2, alpha = 1)
-    plt.plot(poslist, amplist, 'ro', markersize = 12, alpha = 0.5)
+    plt.plot(result_poslist, amplist, 'ro', markersize = 12, alpha = 0.5)
     
 
     # plt.bar(823, 50, width = 40, color = 'y', alpha = 0.3)
     plt.title(figure_title)
     plt.show() 
 
+def plotExpertLabels(ax, raw_sig, annots):
+
+    #get label Dict
+    labelSet = set()
+    labelDict = dict()
+    for pos,label in annots:
+        if label in labelSet:
+            labelDict[label].append(pos)
+        else:
+            labelSet.add(label)
+            labelDict[label] = [pos,]
+
+    # plot to axes
+    for label,posList in labelDict.iteritems():
+        # plot marker for current label
+        if label[0]=='T':
+            color = 'm'
+        elif label[0]=='P':
+            color  = 'b'
+        elif label[0]=='R':
+            color  = 'r'
+        # marker
+        if 'onset' in label:
+            marker = '<'
+        elif 'offset' in label:
+            marker = '>'
+        else:
+            marker = 'o'
+        ax.plot(posList,map(lambda x:raw_sig[int(x)],posList),marker = marker,color = color,linestyle = 'none',markersize = 8,label = label)
+    ax.legend(numpoints = 1)
 
 def viewCWTsignal(raw_sig, fs, figure_title = 'ecg'):
     '''Processing ecg raw_sig.'''
@@ -312,7 +344,7 @@ def viewCWTsignal(raw_sig, fs, figure_title = 'ecg'):
 def viewQT():
     qt = QTloader()
     record_list = qt.getreclist()
-    index = 7
+    index = 8
     for record_name in record_list[index:]:
         print 'record index:', index
         # if record_name != 'sele0612':
