@@ -65,13 +65,18 @@ def removeRangesInQRS(wave_ranges, qrs_ranges):
 
     p1 = 0
     p2 = 0
+    last_pushed_p1 = None
     
     remain_ranges = list()
     while p1 < len(wave_ranges) and p2 < len(qrs_ranges):
-        # No common region
-        if (wave_ranges[p1][1] <= qrs_ranges[p2][0] or
-                wave_ranges[p1][0] >= qrs_ranges[p2][1]):
+        # No common region with QRS
+        print 'Processing Wave ranges:', wave_ranges[p1]
+        if wave_ranges[p1][1] <= qrs_ranges[p2][0]:
+            print 'Push Wave ranges:', wave_ranges[p1]
             remain_ranges.append(wave_ranges[p1])
+        elif wave_ranges[p1][0] >= qrs_ranges[p2][1]:
+            p2 += 1
+            continue
         else:
             left = max(wave_ranges[p1][0], qrs_ranges[p2][0])
             right = min(wave_ranges[p1][1], qrs_ranges[p2][1])
@@ -98,11 +103,18 @@ def removeRangesInQRS(wave_ranges, qrs_ranges):
             p1 += 1
         else:
             p2 += 1
+    while p1 < len(wave_ranges):
+        print 'Push Wave ranges:', wave_ranges[p1]
+        remain_ranges.append(wave_ranges[p1])
+        
     return remain_ranges
             
             
             
 
+def getWaveRange_bw(bw_image, y, qrs_ranges = list(), fs = 250, cwt_levels = [15, 10, 8], width_wiggle_threshold = 7.0 / 250):
+    '''Get wave ranges from bw image.'''
+    
 def getWaveRange(coef, y, qrs_ranges = list(), fs = 250, cwt_levels = [15, 10, 8], width_wiggle_threshold = 7.0 / 250, cwt_threshold = 0.1):
     '''Get possible P wave ranges.'''
     
@@ -124,8 +136,6 @@ def getWaveRange(coef, y, qrs_ranges = list(), fs = 250, cwt_levels = [15, 10, 8
                 # End of group
                 break
         while p1 < len(wave_ranges) and p2 < len(current_ranges):
-            print 'Run:'
-            print wave_ranges[p1], current_ranges[p2]
             
             if wave_ranges[p1] <= current_ranges[p2]:
                 p1_start = p1
@@ -250,14 +260,60 @@ def doCMT(raw_sig, annots, figure_title = 'ecg', cwt_threshold = 0.2):
     noQRS_y = y[:]
 
     coef, freqs=pywt.cwt(y,np.arange(1, 102),'mexh')
-
     coef_shape = coef.shape
 
     fig, ax = plt.subplots(3,1)
 
-    
     # Cut QRS -> cut T
     poslist, T_wave_ranges = getWaveRange(coef, y, qrs_ranges = qrs_ranges, cwt_threshold = cwt_threshold)
+
+    # debug: Plot T_wave_ranges
+    plt.figure(3)
+    plotExpertLabels(plt, original_ecg, annots)
+    result_poslist = poslist
+    amplist = [original_ecg[x] for x in result_poslist]
+    plt.plot(original_ecg, 'b', lw = 2, alpha = 1)
+    plt.plot(result_poslist, amplist, 'yo', markersize = 12, alpha = 0.5)
+    plt.title('Before T wave:' + figure_title)
+
+    bar_step = (np.max(y) - np.min(y)) / 3.0
+    bar_height = bar_step # initial bar height
+    for cwt_level in [15, 10, 8]:
+        poslist = getCwtRange(coef, y, cwt_level, thres = cwt_threshold)
+        p1 = 0
+        while p1 < len(poslist):
+            p1_start = p1
+            while p1 < len(poslist):
+                p1 += 1
+                if p1 >= len(poslist) or poslist[p1] > poslist[p1 - 1] + 1:
+                    # End of group
+                    break
+            width = 1 + poslist[p1 - 1] - poslist[p1_start]
+            left = poslist[p1_start]
+            ax[0].bar(left, bar_height, width = width, alpha = 0.4)
+        bar_height += bar_step
+    # amplify
+    # for pos in P_point_list:
+        # y[pos] *= 10.0
+        # raw_sig[pos] *= 5.0
+    ax[0].plot(y, 'k', lw = 4, alpha = 0.3)
+    ax[0].set_title('Before T wave')
+
+
+    # ax[0].set_xlim(x_range)
+    ax[1].matshow(coef, cmap = plt.gray()) 
+    bw_image = coef[:,:]
+    bw_image[bw_image > cwt_threshold] = 1.0
+    bw_image[bw_image <= cwt_threshold] = 0.0
+    ax[2].matshow(bw_image, cmap = plt.gray()) 
+    # write to file
+    with open('./data/cwt.pkl', 'wb') as fout:
+        import pickle
+        print 'type bw_image:', type(bw_image)
+        print 'type y:', type(y)
+        pdb.set_trace()
+        pickle.dump({'image': bw_image.tolist(), 'ecg':y}, fout)
+    
     y = removeRanges(noQRS_y, T_wave_ranges)
     coef, freqs=pywt.cwt(y,np.arange(1, 102),'mexh')
     T_wave_ranges.extend(qrs_ranges)
@@ -265,6 +321,7 @@ def doCMT(raw_sig, annots, figure_title = 'ecg', cwt_threshold = 0.2):
     poslist.extend(P_poslist)
     result_poslist = poslist
 
+    fig, ax = plt.subplots(3,1)
     bar_height = 10
     for cwt_level in [15, 10, 8]:
         poslist = getCwtRange(coef, y, cwt_level, thres = cwt_threshold)
@@ -310,7 +367,7 @@ def doCMT(raw_sig, annots, figure_title = 'ecg', cwt_threshold = 0.2):
     
 
     # plt.bar(823, 50, width = 40, color = 'y', alpha = 0.3)
-    plt.title(figure_title)
+    plt.title('Final:' + figure_title)
     plt.show() 
 
 def plotExpertLabels(ax, raw_sig, annots):
@@ -363,7 +420,7 @@ def viewCWTsignal(raw_sig, fs, figure_title = 'ecg'):
 def viewQT():
     qt = QTloader()
     record_list = qt.getreclist()
-    index = 19
+    index = 89
     for record_name in record_list[index:]:
         print 'record index:', index
         # if record_name != 'sele0612':

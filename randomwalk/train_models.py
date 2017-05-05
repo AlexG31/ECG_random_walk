@@ -95,7 +95,7 @@ def testing(random_walker, raw_sig, seed_step_size = 200):
     print 'testing finished in %.3f seconds.' % (time.time() - start_time)
     return result_list
 
-def TrainingModels(target_label, model_file_name, training_list):
+def TrainingModels(target_label, model_file_name, training_list, random_pattern_file_name):
     '''Randomly select num_training records to train, and test others.'''
     qt = QTloader()
     record_list = qt.getreclist()
@@ -105,7 +105,7 @@ def TrainingModels(target_label, model_file_name, training_list):
             max_depth = 10)
     walker = RandomWalker(target_label = target_label,
             random_forest_config = random_forest_config,
-            random_pattern_file_name = os.path.join(os.path.dirname(model_file_name), 'random_pattern.json'))
+            random_pattern_file_name = random_pattern_file_name)
 
     start_time = time.time()
     for record_name in training_list:
@@ -130,7 +130,9 @@ if __name__ == '__main__':
     label_list = ['P', 'Ponset', 'Poffset',
             'T', 'Toffset',
             'Ronset', 'R', 'Roffset']
-    root_folder = 'data/db2WT'
+    root_folder = 'data/noQRSWT'
+    random_pattern_file_name = os.path.join(root_folder, 'random_pattern.json')
+
     # Refresh training list
     num_training = 105
     trianing_list = list()
@@ -174,4 +176,4 @@ if __name__ == '__main__':
         json.dump(training_list, fout, indent = 4)
     for target_label in label_list:
         model_file_name = os.path.join(root_folder, '%s.mdl' % target_label)
-        TrainingModels(target_label, model_file_name, training_list)
+        TrainingModels(target_label, model_file_name, training_list, random_pattern_file_name)
