@@ -80,8 +80,9 @@ class RandomWalker(object):
 
         configuration_info = self.get_configuration()
         # feature_extractor = ECGfeatures(raw_sig, configuration_info)
-        print 'NQRSfeatures extractor.'
-        feature_extractor = NQRSfeatures(raw_sig, expert_annotations, configuration_info)
+        import test_api
+        QRS_annots = test_api.preTesting(raw_sig, 250)
+        feature_extractor = NQRSfeatures(raw_sig, QRS_annots, configuration_info)
 
         len_annotations = len(annot_pos_list)
         for pos in training_indexes:
