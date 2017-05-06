@@ -9,6 +9,7 @@ import numpy as np
 import numpy.random as random
 import random as pyrandom
 from feature_extractor.feature_extractor import ECGfeatures
+from feature_extractor.NQRS_feature_extractor import NQRSfeatures
 from sklearn.ensemble import RandomForestRegressor
 
 class RandomWalker(object):
@@ -78,7 +79,9 @@ class RandomWalker(object):
         training_indexes = self.gaussian_training_sampling(annot_pos_list)
 
         configuration_info = self.get_configuration()
-        feature_extractor = ECGfeatures(raw_sig, configuration_info)
+        # feature_extractor = ECGfeatures(raw_sig, configuration_info)
+        print 'NQRSfeatures extractor.'
+        feature_extractor = NQRSfeatures(raw_sig, expert_annotations, configuration_info)
 
         len_annotations = len(annot_pos_list)
         for pos in training_indexes:
@@ -129,7 +132,8 @@ class RandomWalker(object):
 
     
         configuration_info = self.get_configuration()
-        feature_extractor = ECGfeatures(raw_sig, configuration_info)
+        # feature_extractor = ECGfeatures(raw_sig, configuration_info)
+        feature_extractor = NQRS_ECGfeatures(raw_sig, expert_annotations, configuration_info)
 
         training_data = list()
         len_annotations = len(annot_pos_list)
@@ -177,7 +181,9 @@ class RandomWalker(object):
         len_sig = len(raw_signal)
         pos_list = pyrandom.sample(xrange(100000, 101000), num2test)
         configuration_info = self.get_configuration()
-        feature_extractor = ECGfeatures(raw_signal, configuration_info)
+        # feature_extractor = ECGfeatures(raw_signal, configuration_info)
+        print 'Should get expert annots'
+        feature_extractor = NQRSfeatures(raw_signal, annots, configuration_info)
 
         results = list()
         testing_features = list()
@@ -192,12 +198,15 @@ class RandomWalker(object):
         '''Increase the probability of left and right directions.'''
         return 1.0 / (1.0 + np.exp(-x)) - 0.5
         
-    def GetFeatureExtractor(self, raw_signal):
+    def GetFeatureExtractor(self, raw_signal, annots):
         '''Get feature extractor for a given signal.'''
         if len(raw_signal) == 0:
             raise Exception('Empty testing signal!')
         configuration_info = self.get_configuration()
-        feature_extractor = ECGfeatures(raw_signal, configuration_info)
+        if annots is None:
+            feature_extractor = ECGfeatures(raw_signal, configuration_info)
+        else:
+            feature_extractor = NQRSfeatures(raw_signal, annots, configuration_info)
         return feature_extractor
 
     def testing_walk_extractor(self, feature_extractor,

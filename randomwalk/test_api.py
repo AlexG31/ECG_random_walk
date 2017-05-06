@@ -65,7 +65,24 @@ def Denoise(raw_sig, level = 7, low = 1, high = 1):
     print len_sig
     return raw_sig
 
-def Testing(raw_sig_in, fs, model_list, walker_iterations = 100, walker_stepsize = 10):
+def preTesting(raw_sig_in,
+        fs,
+        model_folder = '/home/alex/LabGit/ECG_random_walk/randomwalk/data/Lw3Np4000/improved',
+        pattern_file_name = '/home/alex/LabGit/ECG_random_walk/randomwalk/data/Lw3Np4000/random_pattern.json',
+        walker_iterations = 100,
+        walker_stepsize = 10):
+    '''Testing with pretrained model.'''
+    
+    print 'preTesting start ...'
+    model_list = GetModels(model_folder, pattern_file_name)
+    return Testing(raw_sig_in,
+            fs,
+            model_list,
+            walker_iterations = walker_iterations,
+            walker_stepsize = walker_stepsize)
+    
+
+def Testing(raw_sig_in, fs, model_list, walker_iterations = 100, walker_stepsize = 10, pretest = False):
     '''Testing API.
     Input:
         raw_sig: ECG signal.
@@ -83,7 +100,7 @@ def Testing(raw_sig_in, fs, model_list, walker_iterations = 100, walker_stepsize
     dpi = DPI(debug_info = dict())
     r_list = dpi.QRS_Detection(raw_sig, fs = fs_inner)
 
-    walk_results = Testing_random_walk_RR_batch(raw_sig, fs_inner, r_list, model_list, iterations = walker_iterations, stepsize = walker_stepsize)
+    walk_results = Testing_random_walk_RR_batch(raw_sig, fs_inner, r_list, model_list, iterations = walker_iterations, stepsize = walker_stepsize, pretest = pretest)
 
     walk_results.extend(zip(r_list, ['R',] * len(r_list)))
     # walk_results.extend(Testing_QS(raw_sig, fs_inner, r_list))
@@ -126,7 +143,8 @@ def Testing_random_walk_RR(raw_sig, fs, qrs_locations, model_list, iterations = 
 
     # Maybe batch walk?
     # feature_extractor = None
-    feature_extractor = model_list[0][0].GetFeatureExtractor(raw_sig)
+    annots = preTesting(raw_sig, fs)
+    feature_extractor = model_list[0][0].GetFeatureExtractor(raw_sig, annots)
 
     # For benchmarking
     longest_path_len = 0
@@ -280,7 +298,7 @@ def Testing_random_walk_RR(raw_sig, fs, qrs_locations, model_list, iterations = 
 
     return testing_results
 
-def Testing_random_walk_RR_batch(raw_sig, fs, qrs_locations, model_list, iterations = 100, stepsize = 10, batch_size = 100):
+def Testing_random_walk_RR_batch(raw_sig, fs, qrs_locations, model_list, iterations = 100, stepsize = 10, batch_size = 100, pretest = False):
     '''
     Batch testing with random walk based on QRS locations.
     Inputs:
@@ -298,7 +316,11 @@ def Testing_random_walk_RR_batch(raw_sig, fs, qrs_locations, model_list, iterati
 
     # Maybe batch walk?
     # feature_extractor = None
-    feature_extractor = model_list[0][0].GetFeatureExtractor(raw_sig)
+    if pretest:
+        annots = preTesting(raw_sig, fs)
+        feature_extractor = model_list[0][0].GetFeatureExtractor(raw_sig, annots)
+    else:
+        feature_extractor = model_list[0][0].GetFeatureExtractor(raw_sig, None)
 
     # For benchmarking
     longest_path_len = 0
@@ -757,7 +779,8 @@ def TestChanggeng(record_ind):
     results = list()
     # results = Testing_random_walk(raw_sig, 250.0, r_list, model_list)
     # results = Testing(raw_sig, 250.0, model_list, walker_iterations = 200)
-    feature_extractor = model_list[0][0].GetFeatureExtractor(raw_sig)
+    annots = preTesting(raw_sig, fs)
+    feature_extractor = model_list[0][0].GetFeatureExtractor(raw_sig, annots)
     for walker_model, bias, model_label in model_list:
         if model_label != 'P':
             continue
