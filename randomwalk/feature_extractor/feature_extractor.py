@@ -70,9 +70,10 @@ class ECGfeatures(object):
 
     def crop_data_for_swt(self, rawsig):
         '''Padding zeros to make the length of the signal to 2^N.'''
+        if isinstance(rawsig, np.ndarray):
+            rawsig = rawsig.tolist()
 
         # crop rawsig
-
         base2 = 1
         N_data = len(rawsig)
         if len(rawsig) <= 1:

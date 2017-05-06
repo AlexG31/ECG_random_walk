@@ -18,6 +18,8 @@ class NQRSfeatures(feature_extractor.ECGfeatures):
                 configuration_info,
                 wavelet = wavelet)
 
+        print '[debug]: no-QRS feature extractor initialized!'
+
         # Get ecg signal without QRS: self.nQRS_ecg
         self.annots = annots
         self.QRS_ranges = self.getQRSRanges(annots)
