@@ -73,15 +73,20 @@ class RandomWalker(object):
             conf['random_pattern_path'] = self.random_pattern_file_name
         return conf
 
-    def collect_training_data(self, raw_sig, expert_annotations):
+    def collect_training_data(self, raw_sig, expert_annotations, pre_annotations = None):
         '''Incrementally collect training samples X and training values y.'''
         annot_pos_list = [x[0] for x in expert_annotations if x[1] == self.target_label]
         training_indexes = self.gaussian_training_sampling(annot_pos_list)
 
         configuration_info = self.get_configuration()
         # feature_extractor = ECGfeatures(raw_sig, configuration_info)
-        import test_api
-        QRS_annots = test_api.preTesting(raw_sig, 250)
+        if pre_annotations is None:
+            import test_api
+            QRS_annots = test_api.preTesting(raw_sig, 250)
+        else:
+            print '[Warning]: using qt annotations'
+            QRS_annots = pre_annotations
+
         feature_extractor = NQRSfeatures(raw_sig, QRS_annots, configuration_info)
 
         len_annotations = len(annot_pos_list)

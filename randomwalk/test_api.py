@@ -8,6 +8,8 @@ import joblib
 import scipy.signal
 import pdb
 
+from multiprocessing import Pool
+
 from dpi.DPI_QRS_Detector import DPI_QRS_Detector as DPI
 from random_walker import RandomWalker
 
@@ -854,8 +856,51 @@ def TestChanggeng(record_ind):
     plt.show(block = False)
     pdb.set_trace()
 
+
+def testQT(record_name):
+    result_file_name = './qt_annots/%s.json' % record_name
+    if os.path.exists(result_file_name):
+        return None
+
+    from QTdata.loadQTdata import QTloader
+    qt = QTloader()
+    print '\ntesting %s' % record_name
+    sig = qt.load(record_name)
+    raw_sig = sig['sig']
+
+    annots = preTesting(raw_sig, 250.0)
+    with open(result_file_name, 'w') as fout:
+        import json
+        json.dump(annots, fout)
+        print 'result %s saved' % record_name
+
+def generateQTannots():
+    '''Generate QTdb annotations.'''
+    from QTdata.loadQTdata import QTloader
+    qt = QTloader()
+    record_list = qt.getreclist()
+    pool = Pool(4)
+    pool.map(testQT, record_list)
+    # for record_name in record_list:
+        # print '\ntesting %s' % record_name
+        # sig = qt.load(record_name)
+        # raw_sig = sig['sig']
+        # result_file_name = './qt_annots/%s.json' % record_name
+        # if os.path.exists(result_file_name):
+            # continue
+
+        # annots = preTesting(raw_sig, 250.0)
+        # with open(result_file_name, 'w') as fout:
+            # import json
+            # json.dump(annots, fout)
+            # print 'result %s saved' % record_name
+    
+    
+
 if __name__ == '__main__':
+    generateQTannots()
+
     # Test1()
-    for record_ind in xrange(0, 12):
-        TestChanggeng(record_ind)
+    # for record_ind in xrange(0, 12):
+        # TestChanggeng(record_ind)
 
