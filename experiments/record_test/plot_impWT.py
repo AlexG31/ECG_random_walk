@@ -32,6 +32,8 @@ curfolderpath = os.path.dirname(curfilepath)
 projhomepath = os.path.dirname(curfolderpath)
 from QTdata.loadQTdata import QTloader
 
+from randomwalk.changgengLoader import ECGLoader as cLoader
+
 def plotExpertLabels(ax, raw_sig, annots):
 
     #get label Dict
@@ -67,31 +69,55 @@ def plotExpertLabels(ax, raw_sig, annots):
         ax.plot(posList,map(lambda x:raw_sig[int(x)],posList),marker = marker,color = color,linestyle = 'none',markersize = 8,label = label)
     ax.legend(numpoints = 1)
 
-def plotResult(record_name = '51087'):
-    '''Plot ECG delineation result.'''
-    result_file_path = curfolderpath + '/changgeng/%s.json' % record_name
-    annot_file_path= curfolderpath + '/tmpWT/%s.json' % record_name
-    with open(result_file_path, 'r') as fin:
-        raw_sig = json.load(fin)
+def saveResult2Image(cID, annot_path, output_path):
+    '''Save ECG delineation result as figure.'''
+    cloader = cLoader(1, 1)
+    raw_sig = cloader.loadID(cID)
 
     # Load expert labels
-    with open(annot_file_path, 'r') as fin:
+    with open(annot_path, 'r') as fin:
         data = json.load(fin)
         annots = data
     fig, ax = plt.subplots(1,1)
     fig.set_figheight(10, forward = True)
     fig.set_figwidth(30, forward = True)
     plt.plot(raw_sig, 'k')
-    plt.title(record_name)
+    plt.title(cID)
+    plt.grid(True)
+    plotExpertLabels(ax, raw_sig, annots)
+    plotECGGrid(ax)
+
+    plt.xlim((-40, len(raw_sig) + 40))
+    # plt.ylim((-1,3))
+    plt.savefig(output_path)
+
+def plotResult(record_name = '51087', annot_file_path = None):
+    '''Plot ECG delineation result.'''
+    cloader = cLoader(1, 1)
+    raw_sig = cloader.loadID(record_name)
+
+    # Load expert labels
+    with open(annot_file_path, 'r') as fin:
+        data = json.load(fin)
+        annots = data
+
+
+        from post_p import post_p
+        annots = post_p(raw_sig, annots, 500)
+    fig, ax = plt.subplots(1,1)
+    fig.set_figheight(10, forward = True)
+    fig.set_figwidth(30, forward = True)
+    plt.plot(raw_sig, 'k')
     plt.grid(True)
     plotExpertLabels(ax, raw_sig, annots)
     plotECGGrid(ax)
 
 
+    plt.title(record_name + ' post p')
     plt.xlim((-40, len(raw_sig) + 40))
     # plt.ylim((-1,3))
-    plt.savefig('./results/P-images/%s.png' % record_name)
-    # plt.show(block = True)
+    # plt.savefig('./results/P-images/%s.png' % record_name)
+    plt.show(block = True)
     # pdb.set_trace()
 
 
@@ -141,9 +167,9 @@ def plotECGGrid(ax):
 
 if __name__ == '__main__':
     import glob
-    json_files = glob.glob(curfolderpath + '/tmpWT/*.json')
+    json_files = glob.glob(curfolderpath + '/shortQT/test_results/*.json')
     for jsonfile in json_files:
        record_name = os.path.split(jsonfile)[-1]
        record_name = record_name.split('.')[0]
-       plotResult(record_name)
+       plotResult(record_name, jsonfile)
     # plotResult('53789')
