@@ -5,9 +5,11 @@ Date: 2017.4
 """
 import os
 import sys
+import wget
 import json
 import math
 import pickle
+import codecs
 import random
 import pywt
 import time
@@ -21,7 +23,9 @@ import matplotlib
 import matplotlib.pyplot as plt
 from numpy import pi, r_
 from scipy import optimize
+import scipy.io as sio
 import Tkinter
+import requests
 import tkMessageBox
 
 curfilepath =  os.path.realpath(__file__)
@@ -37,6 +41,18 @@ class ECGLoader(object):
     def load(self, record_name):
         '''Return loaded signal info.'''
         return self.getSignal('%s.json' % str(record_name), 'II')
+
+    def loadID(self, ID, leadname = 'II'):
+        '''Load changgeng data by ID.'''
+        ID = str(ID)
+        data_path = '/usr/share/changgeng/%s.mat' % ID
+        if os.path.exists(data_path) == False:
+            url = 'http://192.168.1.117:8000/api/medexs/cgd/download/' + str(ID)
+            print 'wget download:', wget.download(url, out = data_path)
+        mat = sio.loadmat(data_path)
+        raw_sig = np.squeeze(mat[leadname])
+        return raw_sig
+        
 
     def loadAnnot(self, record_name, target_label = 'P'):
         '''Return loaded signal info.'''
@@ -89,6 +105,7 @@ class ECGLoader(object):
 
 if __name__ == '__main__':
     ecg = ECGLoader(1,1)
+
     for record_ID in ecg.P_faillist:
         raw_sig = ecg.load(record_ID)
         raw_sig = list(raw_sig[0])
