@@ -86,7 +86,7 @@ def preTesting(raw_sig_in,
     return annots
     
 
-def Testing(raw_sig_in, fs, model_list, walker_iterations = 100, walker_stepsize = 10, pretest = False):
+def Testing(raw_sig_in, fs, model_list, walker_iterations = 100, walker_stepsize = 10, pretest = False, pretest_model_folder = None, pretest_pattern_file_name = None):
     '''Testing API.
     Input:
         raw_sig: ECG signal.
@@ -302,7 +302,7 @@ def Testing_random_walk_RR(raw_sig, fs, qrs_locations, model_list, iterations = 
 
     return testing_results
 
-def Testing_random_walk_RR_batch(raw_sig, fs, qrs_locations, model_list, iterations = 100, stepsize = 10, batch_size = 100, pretest = False):
+def Testing_random_walk_RR_batch(raw_sig, fs, qrs_locations, model_list, iterations = 100, stepsize = 10, batch_size = 100, pretest = False, pretest_model_folder = None, pretest_pattern_file_name = None):
     '''
     Batch testing with random walk based on QRS locations.
     Inputs:
@@ -321,7 +321,7 @@ def Testing_random_walk_RR_batch(raw_sig, fs, qrs_locations, model_list, iterati
     # Maybe batch walk?
     # feature_extractor = None
     if pretest:
-        annots = preTesting(raw_sig, fs)
+        annots = preTesting(raw_sig, fs, model_folder = pretest_model_folder, pattern_file_name = pretest_pattern_file_name)
         feature_extractor = model_list[0][0].GetFeatureExtractor(raw_sig, annots)
     else:
         feature_extractor = model_list[0][0].GetFeatureExtractor(raw_sig, None)
