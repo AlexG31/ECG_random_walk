@@ -95,7 +95,7 @@ class PWave(object):
         plt.clf()
         plt.plot(sig_seg, label = 'ECG')
         plt.plot(fitting_curve, label = 'fitting curve')
-        plt.plot(baseline_curve, 'r', alpha = 0.5, lw=5, label = 'fitting curve')
+        plt.plot(baseline_curve, 'r', alpha = 0.5, lw=5, label = 'Baseline curve')
 
         # Hermit coef vis
         plt.bar(xrange(0, len(hermit_coefs)),
@@ -373,7 +373,7 @@ def plotExpertLabels(ax, raw_sig, annots):
         ax.plot(posList,map(lambda x:raw_sig[int(x)],posList),marker = marker,color = color,linestyle = 'none',markersize = 8,label = label)
     ax.legend(numpoints = 1)
 
-def enhance():
+def enhance_demo():
     '''Find more accurate characteristic point position.'''
     loader = cLoader(2,1)
     recordID = '54722'
@@ -383,7 +383,7 @@ def enhance():
         annots = post_p(sig, annots, 500)
     
 
-    x_range = (900, 1010)
+    x_range = (920, 1010)
     Pannots = map(lambda x: [x[0] - x_range[0], x[1]], filter(lambda x: x[0] >= x_range[0] and x[0] <= x_range[1], annots))
     pwave = PWave(sig, fs = 500.0)
     pwave.detectGaussian(sig[x_range[0]:x_range[1]], Pannots, 500.0)
@@ -392,12 +392,50 @@ def enhance():
     print 'Annotations:'
     print Pannots
 
-    pdb.set_trace()
-    # fig, ax = plt.subplots(1,1)
-    # plt.plot(sig)
-    # plotExpertLabels(ax, sig, annots)
-    # plt.show()
+    fig, ax = plt.subplots(1,1)
+    plt.plot(sig)
+    plotExpertLabels(ax, sig, annots)
+    plt.show()
 
+def enhance_test():
+    '''Find more accurate characteristic point position.'''
+    loader = cLoader(2,1)
+    recordID = '54722'
+    sig = loader.loadID(recordID)
+    with open('./data/tmpWT/%s.json' % recordID, 'r') as fin:
+        annots = json.load(fin)
+        annots = post_p(sig, annots, 500)
+        annots.sort(key = lambda x:x[0])
+    
+    x_range_list = list()
+    x_range_start = None
+    for ind in xrange(0, len(annots)):
+        pos, label = annots[ind]
+        if label == 'Ponset':
+            x_range_start = pos - 5
+        elif label == 'Poffset':
+            if x_range_start is not None:
+                x_range_list.append((x_range_start, pos + 5))
+            x_range_start = None
+            
+
+    
+    x_range = (920, 1010)
+    for x_range in x_range_list:
+        Pannots = map(lambda x: [x[0] - x_range[0], x[1]], filter(lambda x: x[0] >= x_range[0] and x[0] <= x_range[1], annots))
+        pwave = PWave(sig, fs = 500.0)
+        pwave.detectGaussian(sig[x_range[0]:x_range[1]], Pannots, 500.0)
+
+        pdb.set_trace()
+
+
+    print 'Annotations:'
+    print Pannots
+
+    fig, ax = plt.subplots(1,1)
+    plt.plot(sig)
+    plotExpertLabels(ax, sig, annots)
+    plt.show()
 
 if __name__ == '__main__':
-    enhance()
+    enhance_test()

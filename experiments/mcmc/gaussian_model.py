@@ -122,7 +122,16 @@ def MakeModel(sig, annots, max_hermit_level = 7):
             pos_p = pos
         elif label == 'Poffset':
             pos_poffset = pos
+    # Validation check
+    if None in [pos_p, pos_ponset, pos_poffset]:
+        raise StandardError('P wave annotations is not complete in this segment!')
 
+    # val1 = sig[pos_p]
+    # val2 = sig[pos_ponset]
+    # val3 = sig[pos_poffset]
+    # print sig[pos_p] - sig[pos_ponset]
+    # print sig[pos_p] - sig[pos_poffset]
+    # pdb.set_trace()
     gaussian_amplitude = max(abs(sig[pos_p] - sig[pos_ponset]), abs(sig[pos_p] - sig[pos_poffset]))
     gaussian_amplitude = pymc.Normal('g_amp', mu = gaussian_amplitude, tau = 100)
     gaussian_sigma = (abs(pos_p - pos_ponset) + abs(pos_p - pos_poffset)) / 2.0
