@@ -28,6 +28,7 @@ def post_p(raw_sig, annots, fs):
 
             if np.argmax(raw_sig[ponset:poffset + 1]) + ponset != pos:
                 pos = int(np.argmax(raw_sig[ponset:poffset + 1]) + ponset)
+            pos = int(pos)
 
             # Poffset too close to pos
             if poffset - pos < 10 / 500.0 * fs:
