@@ -125,8 +125,8 @@ def Testing_QS(raw_sig, fs, r_list):
                 raw_sig,
                 r_pos - 10 / 250.0 * fs, r_pos, r_pos + 10 / 250.0 * fs,
                 debug_plot = False)
-        results.append((qrs_pos[0], 'Ronset'))
-        results.append((qrs_pos[2], 'Roffset'))
+        results.append((qrs_pos[0], 'Q'))
+        results.append((qrs_pos[2], 'S'))
     return results
 
 def Testing_random_walk_RR(raw_sig, fs, qrs_locations, model_list, iterations = 100, stepsize = 10):
