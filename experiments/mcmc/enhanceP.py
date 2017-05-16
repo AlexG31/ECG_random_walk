@@ -8,7 +8,7 @@ import math
 from pymc import MCMC
 import scipy.signal as signal
 from randomwalk.changgengLoader import ECGLoader as cLoader
-from post_p import post_p
+from post_p import post_p, post_p_mcmc
 
 class PWave(object):
     def __init__(self, raw_sig, fs = 250.0, p_wave_lengthMs = 38 * 4):
@@ -37,6 +37,7 @@ class PWave(object):
             burn_count = 2000,
             max_hermit_level = 4,
             savefig_path = None,
+            figID = None,
             ):
         '''Detect and returns P wave detection results.
             Note:
@@ -99,12 +100,47 @@ class PWave(object):
         baseline_curve = baseline_curve.tolist()
         fitting_curve += gaussian_segment
         
+        # Compute results
+        results = dict(P=pos_p)
+        meet_threshold = 0.07
+        for ind in xrange(0, len(fitting_curve)):
+            if ('Ponset' not in results and
+                    abs(fitting_curve[ind] - baseline_curve[ind]) >= meet_threshold):
+                results['Ponset'] = ind
+            elif ('Ponset' in results and
+                    abs(fitting_curve[ind] - baseline_curve[ind]) >= meet_threshold):
+                results['Poffset'] = ind
+        # If not found
+        if 'Ponset' not in results:
+            results['Ponset'] = pos_ponset
+            results['Poffset'] = pos_poffset
+        elif 'Poffset' not in results:
+            results['Poffset'] = pos_poffset
 
-        plt.figure(1)
+        # Plot figure
+        plt.figure(1, figsize = (12, 7))
         plt.clf()
         plt.plot(sig_seg, label = 'ECG')
         plt.plot(fitting_curve, label = 'fitting curve')
         plt.plot(baseline_curve, 'r', alpha = 0.5, lw=5, label = 'Baseline curve')
+
+        # P wave annotations
+        plt.plot(pos_ponset, sig_seg[pos_ponset], '<', markersize = 12, alpha = 0.7,
+                label = 'Ponset')
+        plt.plot(pos_p, sig_seg[pos_p], 'o', markersize = 12, alpha = 0.7,
+                label = 'P')
+        plt.plot(pos_poffset, sig_seg[pos_poffset], '>', markersize = 12, alpha = 0.7,
+                label = 'Poffset')
+        # P wave enhancement
+        pos_ponset = results['Ponset']
+        plt.plot(pos_ponset, sig_seg[pos_ponset], '<', markeredgecolor = 'black',
+                markersize = 12, alpha = 0.7,
+                label = 'Ponset enhanced')
+        pos_poffset = results['Poffset']
+        plt.plot(pos_poffset, sig_seg[pos_poffset], '>', markeredgecolor = 'black',
+                markersize = 12, alpha = 0.7,
+                label = 'Poffset enhanced')
+
 
         # Hermit coef vis
         plt.bar(xrange(0, len(hermit_coefs)),
@@ -123,12 +159,14 @@ class PWave(object):
                 color = 'r')
         plt.legend()
         plt.grid(True)
+        plt.title(figID)
+        plt.ylim((-0.2, 1.2))
         plt.show(block = False)
 
         if savefig_path is not None:
             plt.savefig(savefig_path)
 
-        results = dict()
+                
 
         return results
 
@@ -436,7 +474,7 @@ def enhance_test():
         figID = recordID + '_x_%d' % x_range[0]
         Pannots = map(lambda x: [x[0] - x_range[0], x[1]], filter(lambda x: x[0] >= x_range[0] and x[0] <= x_range[1], annots))
         pwave = PWave(sig, fs = 500.0)
-        pwave.detectGaussian(sig[x_range[0]:x_range[1]], Pannots, 500.0, savefig_path = './data/%s.png' % figID)
+        pwave.detectGaussian(sig[x_range[0]:x_range[1]], Pannots, 500.0, savefig_path = './data/%s.png' % figID, figID = figID)
 
         # pdb.set_trace()
 
@@ -449,5 +487,22 @@ def enhance_test():
     plotExpertLabels(ax, sig, annots)
     plt.show()
 
+def post_p_mcmc_test():
+    '''Find more accurate characteristic point position.'''
+    loader = cLoader(2,1)
+    recordID = '54722'
+    sig = loader.loadID(recordID)
+    with open('./data/tmpWT/%s.json' % recordID, 'r') as fin:
+        annots = json.load(fin)
+        annots = post_p(sig, annots, 500)
+        annots.sort(key = lambda x:x[0])
+        annots = post_p_mcmc(sig, annots, 500)
+    
+
+    fig, ax = plt.subplots(1,1)
+    plt.plot(sig)
+    plotExpertLabels(ax, sig, annots)
+    plt.show()
 if __name__ == '__main__':
-    enhance_test()
+    # enhance_test()
+    post_p_mcmc_test()
