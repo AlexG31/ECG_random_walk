@@ -29,7 +29,12 @@ def Test1(target_label = 'P', num_training = 25):
     for record_name in training_list:
         print 'Collecting features from record %s.' % record_name
         sig = qt.load(record_name)
-        walker.collect_training_data(sig['sig'], qt.getExpert(record_name))
+
+
+        with open('/home/alex/LabGit/ECG_random_walk/randomwalk/qt_annots/%s.json' % record_name, 'r') as fin:
+            print '[Warning]:Loading annotations from json file: \n %s' % ('/home/alex/LabGit/ECG_random_walk/randomwalk/qt_annots/%s.json' % record_name)
+            pre_annotations = json.load(fin)
+        walker.collect_training_data(sig['sig'], qt.getExpert(record_name), pre_annotations = pre_annotations)
     print 'random forest start training...'
     walker.training()
     print 'trianing used %.3f seconds' % (time.time() - start_time)
@@ -125,7 +130,10 @@ def TrainingModels(target_label, model_file_name, training_list):
             
         print 'Collecting features from record %s.' % record_name
         sig = qt.load(record_name)
-        walker.collect_training_data(sig['sig'], Tonset_marks)
+        with open('/home/alex/LabGit/ECG_random_walk/randomwalk/qt_annots/%s.json' % record_name, 'r') as fin:
+            print '[Warning]:Loading annotations from json file: \n %s' % ('/home/alex/LabGit/ECG_random_walk/randomwalk/qt_annots/%s.json' % record_name)
+            pre_annotations = json.load(fin)
+        walker.collect_training_data(sig['sig'], Tonset_marks,pre_annotations = pre_annotations)
     print 'random forest start training(%s)...' % target_label
     walker.training()
     print 'trianing used %.3f seconds' % (time.time() - start_time)
@@ -139,7 +147,7 @@ def TrainingModels(target_label, model_file_name, training_list):
 
 
 if __name__ == '__main__':
-    root_folder = 'data/Lw3Np4000/improved'
+    root_folder = 'data/noQRSWT/'
     # Refresh training list
     num_training = 105
     trianing_list = list()
