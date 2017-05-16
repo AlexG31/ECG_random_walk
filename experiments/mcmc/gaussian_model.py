@@ -105,7 +105,7 @@ def MakeModel(sig, annots, max_hermit_level = 7):
     hermit_coefs.append(pymc.Normal('hc%d' % ind, mu = 0, tau = 1))
     # level 2
     ind = 2
-    hermit_coefs.append(pymc.Normal('hc%d' % ind, mu = 0, tau = 1))
+    hermit_coefs.append(pymc.Normal('hc%d' % ind, mu = 0, tau = 900))
     for ind in xrange(3, HermitFunction_max_level):
         coef = pymc.Normal('hc%d' % ind, mu = 0, tau = 1)
         hermit_coefs.append(coef)

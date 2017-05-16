@@ -36,13 +36,22 @@ class PWave(object):
             iter_count = 4000,
             burn_count = 2000,
             max_hermit_level = 4,
+            savefig_path = None,
             ):
         '''Detect and returns P wave detection results.
             Note:
-                This function returns None when detection fails.
+                * Input is a segment contains only P wave.
+                * This function returns None when detection fails.
         '''
-        # r_list = self.r_list
-        raw_sig = np.array(filtered_sig) * 10.0
+        filtered_sig = np.array(filtered_sig)
+        # Normalization
+        max_val = np.max(filtered_sig)
+        min_val = np.min(filtered_sig)
+        if (max_val - min_val) > 1e-6:
+            filtered_sig = (filtered_sig - min_val) / (max_val - min_val)
+
+
+        raw_sig = filtered_sig
         sig_seg = raw_sig
         
 
@@ -115,7 +124,9 @@ class PWave(object):
         plt.legend()
         plt.grid(True)
         plt.show(block = False)
-        # plt.savefig('./results/tmp/%d.png' % int(time.time()))
+
+        if savefig_path is not None:
+            plt.savefig(savefig_path)
 
         results = dict()
 
@@ -420,13 +431,14 @@ def enhance_test():
             
 
     
-    x_range = (920, 1010)
+    # MCMC testing
     for x_range in x_range_list:
+        figID = recordID + '_x_%d' % x_range[0]
         Pannots = map(lambda x: [x[0] - x_range[0], x[1]], filter(lambda x: x[0] >= x_range[0] and x[0] <= x_range[1], annots))
         pwave = PWave(sig, fs = 500.0)
-        pwave.detectGaussian(sig[x_range[0]:x_range[1]], Pannots, 500.0)
+        pwave.detectGaussian(sig[x_range[0]:x_range[1]], Pannots, 500.0, savefig_path = './data/%s.png' % figID)
 
-        pdb.set_trace()
+        # pdb.set_trace()
 
 
     print 'Annotations:'
