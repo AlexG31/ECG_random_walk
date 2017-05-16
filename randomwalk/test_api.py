@@ -96,6 +96,10 @@ def Testing(raw_sig_in, fs, model_list, walker_iterations = 100, walker_stepsize
     '''
     if fs <= 1e-6:
         raise Exception('Unexpected sampling frequency of %f.' % fs)
+    if pretest == True:
+        if (pretest_model_folder is None or
+                pretest_pattern_file_name is None):
+            raise StandardError('pretest_model_folder and pretest_pattern_file_name must be set if pretest = True!')
     raw_sig = raw_sig_in[:]
     if abs(fs - 250.0) > 1e-6:
         raw_sig = scipy.signal.resample(raw_sig, int(len(raw_sig) / float(fs) * 250.0))
@@ -104,7 +108,7 @@ def Testing(raw_sig_in, fs, model_list, walker_iterations = 100, walker_stepsize
     dpi = DPI(debug_info = dict())
     r_list = dpi.QRS_Detection(raw_sig, fs = fs_inner)
 
-    walk_results = Testing_random_walk_RR_batch(raw_sig, fs_inner, r_list, model_list, iterations = walker_iterations, stepsize = walker_stepsize, pretest = pretest)
+    walk_results = Testing_random_walk_RR_batch(raw_sig, fs_inner, r_list, model_list, iterations = walker_iterations, stepsize = walker_stepsize, pretest = pretest, pretest_model_folder = pretest_model_folder, pretest_pattern_file_name = pretest_pattern_file_name)
 
     walk_results.extend(zip(r_list, ['R',] * len(r_list)))
     # walk_results.extend(Testing_QS(raw_sig, fs_inner, r_list))
@@ -675,6 +679,8 @@ def GetModels(model_folder, pattern_file_name):
     # Get model dict
     models = list()
     for target_label, bias in zip(label_list, bias_list):
+        print 'model_folder:', model_folder
+        print 'target_label:', target_label
         model_file_name = os.path.join(model_folder, target_label + '.mdl')
         if os.path.exists(model_file_name) == False:
             continue

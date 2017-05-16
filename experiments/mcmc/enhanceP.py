@@ -490,7 +490,7 @@ def enhance_test():
 def post_p_mcmc_test():
     '''Find more accurate characteristic point position.'''
     loader = cLoader(2,1)
-    recordID = '54722'
+    recordID = '5395'
     sig = loader.loadID(recordID)
     with open('./data/tmpWT/%s.json' % recordID, 'r') as fin:
         annots = json.load(fin)
