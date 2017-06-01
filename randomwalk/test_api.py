@@ -324,6 +324,7 @@ def Testing_random_walk_RR_batch(raw_sig, fs, qrs_locations, model_list, iterati
 
     # Maybe batch walk?
     # feature_extractor = None
+    annots = []
     if pretest:
         annots = preTesting(raw_sig, fs, model_folder = pretest_model_folder, pattern_file_name = pretest_pattern_file_name)
         feature_extractor = model_list[0][0].GetFeatureExtractor(raw_sig, annots)
@@ -658,6 +659,7 @@ def Testing_random_walk_RR_batch(raw_sig, fs, qrs_locations, model_list, iterati
         walker_model, bias = model_dict[model_label]
         batch_Toffset_list = RunWalkerModel(walker_model, seed_positions_dict[model_label], confined_ranges_dict[model_label])
          
+    testing_results.extend(annots)
     return testing_results
 
 
