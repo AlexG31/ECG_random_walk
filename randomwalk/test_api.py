@@ -659,7 +659,7 @@ def Testing_random_walk_RR_batch(raw_sig, fs, qrs_locations, model_list, iterati
         walker_model, bias = model_dict[model_label]
         batch_Toffset_list = RunWalkerModel(walker_model, seed_positions_dict[model_label], confined_ranges_dict[model_label])
          
-    testing_results.extend(annots)
+    testing_results.extend(filter(lambda x: x[1] == 'Tonset', annots))
     return testing_results
 
 
