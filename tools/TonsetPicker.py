@@ -33,6 +33,7 @@ curfilepath =  os.path.realpath(__file__)
 curfolderpath = os.path.dirname(curfilepath)
 # my project components
 from QTdata.loadQTdata import QTloader
+from randomwalk.changgengLoader import ECGLoader
 
 
 
@@ -77,20 +78,20 @@ class PointBrowser(object):
     def __init__(self, fig, ax, start_index):
         self.fig = fig
         self.ax = ax
-        self.SaveFolder = os.path.join(curfolderpath, 'results')
+        self.SaveFolder = os.path.join(curfolderpath, 'output')
 
 
         self.text = self.ax.text(0.05, 0.95, 'selected: none',
                             transform=self.ax.transAxes, va='top')
         # ============================
-        # QTdb
-        self.QTdb = QTloader()
-        self.reclist = self.QTdb.reclist
+        self.database = ECGLoader(1,1)
+        self.database_name = 'changgeng'
+        self.reclist = self.database.reclist
         self.recInd = start_index
         self.recname = self.reclist[self.recInd]
-        self.sigStruct = self.QTdb.load(self.recname)
+        self.sigStruct = self.database.load(self.recname)
         self.rawSig = self.sigStruct['sig']
-        self.expLabels = self.QTdb.getexpertlabeltuple(self.recname)
+        self.expLabels = self.database.getexpertlabeltuple(self.recname)
 
         tableau20 = [(31, 119, 180), (174, 199, 232), (255, 127, 14), (255, 187, 120),    
              (44, 160, 44), (152, 223, 138), (214, 39, 40), (255, 152, 150),    
@@ -141,10 +142,10 @@ class PointBrowser(object):
 
         self.update()
     def saveWhiteMarkList2Json(self):
-        with open(os.path.join(self.SaveFolder,'{}_poslist.json'.format(self.recname)),'w') as fout:
+        with open(os.path.join(self.SaveFolder,'{}.json'.format(self.recname)),'w') as fout:
             result_info = dict(
                     ID = self.recname,
-                    database = 'QTdb',
+                    database = self.database_name,
                     poslist = self.poslist,
                     type = 'Tonset')
             json.dump(result_info, fout, indent = 4, sort_keys = True)
@@ -244,9 +245,9 @@ class PointBrowser(object):
         if self.recInd >= len(self.reclist):
             return False
         self.recname = self.reclist[self.recInd]
-        self.sigStruct = self.QTdb.load(self.recname)
+        self.sigStruct = self.database.load(self.recname)
         self.rawSig = self.sigStruct['sig']
-        self.expLabels = self.QTdb.getexpertlabeltuple(self.recname)
+        self.expLabels = self.database.getexpertlabeltuple(self.recname)
         return True
 
     def plotExpertLabels(self,ax):

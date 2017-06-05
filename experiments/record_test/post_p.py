@@ -3,7 +3,6 @@ import os, sys, pdb, json
 import numpy as np
 import matplotlib.pyplot as plt
 
-import gaussian_model as P_model_Gaussian
 import numpy as np
 import math
 from pymc import MCMC
@@ -60,6 +59,7 @@ def post_p(raw_sig, annots, fs):
             
 def post_p_mcmc(raw_sig, annots, fs):
     '''Post processing for P wave with MCMC.'''
+    import gaussian_model as P_model_Gaussian
     annots.sort(key = lambda x:x[0])
     
     x_range_list = list()

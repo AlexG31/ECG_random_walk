@@ -27,4 +27,4 @@ def generate_dir_infolder(folder_name):
 if __name__ == '__main__':
     # generate_dir()
     # generate_dir_shortQT()
-    generate_dir_infolder('currentImages')
+    generate_dir_infolder('mcmc_enhanced')

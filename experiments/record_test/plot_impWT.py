@@ -176,7 +176,7 @@ def plotECGGrid(ax):
 
 def post_p_images():
     import glob
-    json_files = glob.glob(curfolderpath + '/shortQT/test_results/*.json')
+    json_files = glob.glob(curfolderpath + '/shortQT/result0516/*.json')
     for jsonfile in json_files:
        record_name = os.path.split(jsonfile)[-1]
        record_name = record_name.split('.')[0]
@@ -187,13 +187,28 @@ def post_p_images():
                    '%s.png' % record_name),
                post_p = True)
 
+def generate_mcmc_enhanced():
+    import glob
+    json_files = glob.glob(curfolderpath + '/shortQT/mcmc_enhanced/*.json')
+    for jsonfile in json_files:
+       record_name = os.path.split(jsonfile)[-1]
+       record_name = record_name.split('.')[0]
+       saveResult2Image(record_name,
+               jsonfile,
+               os.path.join(curfolderpath, 'results',
+                   'P-images', 'mcmc_enhanced',
+                   '%s.png' % record_name),
+               post_p = False)
 if __name__ == '__main__':
-    post_p_images()
-    # import glob
-    # json_files = glob.glob(curfolderpath + '/shortQT/test_results/*.json')
-    # for jsonfile in json_files:
-       # record_name = os.path.split(jsonfile)[-1]
-       # record_name = record_name.split('.')[0]
-       # plotResult(record_name, jsonfile)
+    # post_p_images()
+    # generate_mcmc_enhanced()
 
-    # plotResult('53789')
+    import glob
+    # json_files = glob.glob(curfolderpath + '/shortQT/test_results/*.json')
+    json_files = glob.glob(curfolderpath + '/tmpWT/*.json')
+    for jsonfile in json_files:
+       record_name = os.path.split(jsonfile)[-1]
+       record_name = record_name.split('.')[0]
+       plotResult(record_name, jsonfile)
+
+    plotResult('53789')

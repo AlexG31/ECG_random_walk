@@ -60,6 +60,7 @@ def post_p(raw_sig, annots, fs):
             
 def post_p_mcmc(raw_sig, annots, fs):
     '''Post processing for P wave with MCMC.'''
+    annots = post_p(raw_sig, annots, fs)
     annots.sort(key = lambda x:x[0])
     
     x_range_list = list()
@@ -88,6 +89,8 @@ def post_p_mcmc(raw_sig, annots, fs):
                 p = ind
             elif label == 'Ponset':
                 ponset = ind
+        if None in [ponset, p, poffset]:
+            continue
 
         Pannots = map(lambda x:[x[0] - x_range[0], x[1]],
                 [annots[ind] for ind in [ponset, p, poffset]])
