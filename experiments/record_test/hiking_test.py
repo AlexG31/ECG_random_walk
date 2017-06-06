@@ -50,6 +50,7 @@ def testing(changgengID = '8790',
             plt.plot(pos_list, amp_list, 'r', alpha = 0.5, lw = 2)
             plt.xlim((min(pos_list) - 200, max(pos_list) + 200))
             plt.plot(output_position, sig[output_position], 'ro', markersize = 12)
+            plt.plot(hiking(path), sig[output_position], 'sm', markersize = 13, alpha = 0.5)
 
 
             # Path and confidence
@@ -66,6 +67,7 @@ def testing(changgengID = '8790',
             plt.figure(2)
             plt.clf()
             plt.hist(pos_list, bins = 30)
+
             plt.show(block = False)
 
 
@@ -103,7 +105,7 @@ def hiking(walk_result):
     bin_width = float(m1 - m0) / bins
     histogram = [0, ] * bins
     for val in pos_list:
-        bin_index = (val - m0) / bin_width
+        bin_index = int((val - m0) / bin_width)
         if bin_index >= bins:
             bin_index = bins - 1
         histogram[bin_index] += 1
@@ -144,7 +146,7 @@ def hiking(walk_result):
                 distance = abs(peak_positions[insert_index - 1] - pos)
                 candidate_index = insert_index - 1
             else:
-                if distance > abs(peak_positions[insert_index - 1] - pos)
+                if distance > abs(peak_positions[insert_index - 1] - pos):
                     distance = abs(peak_positions[insert_index - 1] - pos)
                     candidate_index = insert_index - 1
         voting_scores[candidate_index] += 1
