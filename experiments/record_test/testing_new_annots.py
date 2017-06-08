@@ -253,6 +253,14 @@ def TestChanggeng(debug = False):
 
 def debug_plot_result_normal():
     import glob,json
+    from mcmc.post_p import post_p_mcmc
+    def fix_P_annots(raw_sig, annots):
+        P_annots = filter(lambda x: x[1][0] =='P', annots)
+        annots = filter(lambda x: x[1][0] !='P', annots)
+        P_annots = post_p_mcmc(raw_sig, P_annots, 500.0)
+        annots.extend(P_annots)
+        return annots
+
     files = glob.glob('/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0607/*.json')
     avg_result_folder = '/home/alex/LabGit/ECG_random_walk/experiments/record_test/hiking/avg/'
     cloader = ECGLoader(2, 1)
@@ -267,8 +275,41 @@ def debug_plot_result_normal():
 
         
         raw_sig = cloader.loadID(cID)
+
+        annots = fix_P_annots(raw_sig, annots)
         plot_result(raw_sig, annots)
         # pdb.set_trace()
+def run_post_p(output_folder = './results0607/post_p/'):
+    import glob,json
+    from mcmc.post_p import post_p_mcmc
+    def fix_P_annots(raw_sig, annots):
+        P_annots = filter(lambda x: x[1][0] =='P', annots)
+        annots = filter(lambda x: x[1][0] !='P', annots)
+        P_annots = post_p_mcmc(raw_sig, P_annots, 500.0)
+        annots.extend(P_annots)
+        return annots
+
+    files = glob.glob('/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0607/*.json')
+    avg_result_folder = '/home/alex/LabGit/ECG_random_walk/experiments/record_test/hiking/avg/'
+    cloader = ECGLoader(2, 1)
+    for result_file_name in files:
+        cID = os.path.split(result_file_name)[-1]
+        cID = cID.split('.')[0]
+        print 'Ploting cID:', cID
+        with open(result_file_name, 'r') as fin:
+            annots = json.load(fin)
+        # with open(avg_result_folder + '%s.json' % cID, 'r') as fin:
+            # avg_annots = json.load(fin)
+
+        
+        raw_sig = cloader.loadID(cID)
+
+        annots = fix_P_annots(raw_sig, annots)
+        with open(output_folder + '%s.json' % cID, 'w') as fout:
+            json.dump(annots, fout)
+        # plot_result(raw_sig, annots)
+        # pdb.set_trace()
+
 
 if __name__ == '__main__':
     # testing(test_method = 'test_seed')
@@ -276,4 +317,5 @@ if __name__ == '__main__':
     # TestChanggeng(debug = True)
     # debug_plot_result()
     # debug_plot_result_normal()
-    debug_plot_result_normal()
+    # debug_plot_result_normal()
+    run_post_p()
