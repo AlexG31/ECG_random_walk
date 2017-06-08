@@ -58,7 +58,7 @@ def post_p(raw_sig, annots, fs):
     return annots
 
             
-def post_p_mcmc(raw_sig, annots, fs):
+def post_p_mcmc(raw_sig, annots, fs, expand_width = 20):
     '''Post processing for P wave with MCMC.'''
     if abs(fs - 500.0) > 1e-6:
         raise Exception('fs != 500, we cannot handle that, sorry.')
@@ -71,10 +71,10 @@ def post_p_mcmc(raw_sig, annots, fs):
     for ind in xrange(0, len(annots)):
         pos, label = annots[ind]
         if label == 'Ponset':
-            x_range_start = pos - 5
+            x_range_start = pos - expand_width
         elif label == 'Poffset':
             if x_range_start is not None:
-                x_range_list.append((x_range_start, pos + 5))
+                x_range_list.append((x_range_start, pos + expand_width))
             x_range_start = None
             
 
@@ -97,7 +97,10 @@ def post_p_mcmc(raw_sig, annots, fs):
 
         Pannots = map(lambda x:[x[0] - x_range[0], x[1]],
                 [annots[ind] for ind in [ponset, p, poffset]])
-        results = p_segment_mcmc(raw_sig[x_range[0]:x_range[1]], Pannots, 500.0)
+        ecg_segment = raw_sig[x_range[0]:x_range[1]]
+        if len(ecg_segment) == 0:
+            continue
+        results = p_segment_mcmc(ecg_segment, Pannots, 500.0)
         annots[ponset][0] = results['Ponset'] + x_range[0]
         annots[poffset][0] = results['Poffset'] + x_range[0]
         
@@ -202,4 +205,69 @@ def test_cmp():
 
     print annots
 
+def crop_data_for_swt(rawsig):
+    '''Padding zeros to make the length of the signal to 2^N.'''
+    # crop rawsig
+    base2 = 1
+    N_data = len(rawsig)
+    if len(rawsig)<=1:
+        raise Exception('len(rawsig)={}, not enough for swt!', len(rawsig))
+    crop_len = base2
+    while base2<N_data:
+        if base2*2>=N_data:
+            crop_len = base2*2
+            break
+        base2*=2
+    # Extending this signal input with its tail element.
+    if N_data< crop_len:
+        rawsig += [rawsig[-1],]*(crop_len-N_data)
+    return rawsig
+
+def post_p_wt(raw_sig, annots, fs):
+    '''Post-processing of P wave with wavelet transform.'''
+    import pywt, math
+    annots = post_p(raw_sig, annots, fs)
+    annots.sort(key = lambda x:x[0])
+
+    raw_sig = crop_data_for_swt(raw_sig.tolist())
+    
+    a0 = 0.3133
+    a1 = 2.0 * math.sqrt(2.0 * math.pi)
+    dec_lo = (a0, a0 * 3, a0 * 3, a0)
+    dec_hi = (0, a1, -a1, 0)
+    # rec_lo = (0, a0, a0 * 3, a0 * 3, a0)
+    # rec_hi = (0, 0, -a1, a1, 0)
+    rec_lo = (0, 0, 0, 0)
+    rec_hi = (0, 0, 0, 0)
+
+    filter_bank = [dec_lo, dec_hi, rec_lo, rec_hi]
+    print filter_bank
+    wavelet_q = pywt.Wavelet('q_wave', filter_bank = filter_bank)
+
+    # coefs = pywt.swt(raw_sig, 'bior1.3', level = 7)
+    coefs = pywt.swt(raw_sig, wavelet_q, level = 7)
+
+
+    plt.figure(1)
+
+    m0 = min(raw_sig)
+    m1 = max(raw_sig)
+    # print 'm1 %f, m0 %f' % (m1, m0)
+    raw_sig = [(x - m0)/ (m1 - m0) for x in raw_sig]
+    plt.plot(raw_sig, label = 'ECG')
+    
+    for ind in xrange(-4, -6, -1):
+        wt_signal = coefs[ind][1]
+        m0 = min(wt_signal)
+        m1 = max(wt_signal)
+        # print 'm1 %f, m0 %f' % (m1, m0)
+        wt_signal = [(x - m0)/ (m1 - m0) for x in wt_signal]
+        plt.plot(wt_signal, label = 'WT level %d' % ind)
+    
+    plt.grid(True)
+    plt.legend()
+    plt.show()
+    
+    return []
+    
 

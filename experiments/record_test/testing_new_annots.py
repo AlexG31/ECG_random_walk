@@ -279,7 +279,7 @@ def debug_plot_result_normal():
         annots = fix_P_annots(raw_sig, annots)
         plot_result(raw_sig, annots)
         # pdb.set_trace()
-def run_post_p(output_folder = './results0607/post_p/'):
+def run_post_p(output_folder = '/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0607/post_p/'):
     import glob,json
     from mcmc.post_p import post_p_mcmc
     def fix_P_annots(raw_sig, annots):
@@ -310,7 +310,79 @@ def run_post_p(output_folder = './results0607/post_p/'):
         # plot_result(raw_sig, annots)
         # pdb.set_trace()
 
+def debug_plot_result_post_p():
+    import glob,json
+    from mcmc.post_p import post_p_mcmc
+    def fix_P_annots(raw_sig, annots):
+        P_annots = filter(lambda x: x[1][0] =='P', annots)
+        annots = filter(lambda x: x[1][0] !='P', annots)
+        P_annots = post_p_mcmc(raw_sig, P_annots, 500.0)
+        annots.extend(P_annots)
+        return annots
 
+    files = glob.glob('/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0607/*.json')
+    postp_result_folder = '/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0607/post_p/'
+    cloader = ECGLoader(2, 1)
+    fig, ax = plt.subplots(1,1, figsize=(25, 6))
+    for result_file_name in files:
+        cID = os.path.split(result_file_name)[-1]
+        cID = cID.split('.')[0]
+        print 'Ploting cID:', cID
+        with open(result_file_name, 'r') as fin:
+            annots = json.load(fin)
+
+        if os.path.exists(postp_result_folder + '%s.json' % cID) == False:
+            continue
+        with open(postp_result_folder + '%s.json' % cID, 'r') as fin:
+            postp_annots = json.load(fin)
+
+        
+        raw_sig = cloader.loadID(cID)
+
+        ax.cla()
+        plt.plot(raw_sig)
+        plotExpertLabels(ax, raw_sig, annots, label_prefix = 'Normal')
+
+        postp_annots = filter(lambda x: x[1][0] == 'P', postp_annots)
+        plotExpertLabels(ax, raw_sig, postp_annots, color_in = 'y', label_prefix = 'post_p ')
+        plt.title(u'长庚 ' + cID)
+        plt.xlim((750, len(raw_sig) - 750))
+        
+        plt.grid(True)
+        # plt.savefig('/home/alex/图片/work_pngs/RandomWalkPath/hiking/hiking_%s.png' % cID)
+        plt.show(block=False)
+        pdb.set_trace()
+
+def run_post_p_wt(output_folder = '/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0607/post_p/'):
+    import glob,json
+    from mcmc.post_p import post_p_wt
+    def fix_P_annots(raw_sig, annots):
+        P_annots = filter(lambda x: x[1][0] =='P', annots)
+        annots = filter(lambda x: x[1][0] !='P', annots)
+        P_annots = post_p_wt(raw_sig, P_annots, 500.0)
+        annots.extend(P_annots)
+        return annots
+
+    files = glob.glob('/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0607/*.json')
+    avg_result_folder = '/home/alex/LabGit/ECG_random_walk/experiments/record_test/hiking/avg/'
+    cloader = ECGLoader(2, 1)
+    for result_file_name in files:
+        cID = os.path.split(result_file_name)[-1]
+        cID = cID.split('.')[0]
+        print 'Ploting cID:', cID
+        with open(result_file_name, 'r') as fin:
+            annots = json.load(fin)
+        # with open(avg_result_folder + '%s.json' % cID, 'r') as fin:
+            # avg_annots = json.load(fin)
+
+        
+        raw_sig = cloader.loadID(cID)
+
+        annots = fix_P_annots(raw_sig, annots)
+        # with open(output_folder + '%s.json' % cID, 'w') as fout:
+            # json.dump(annots, fout)
+        # plot_result(raw_sig, annots)
+        pdb.set_trace()
 if __name__ == '__main__':
     # testing(test_method = 'test_seed')
     # testing(changgengID = '56332', leadname = 'III')
@@ -318,4 +390,6 @@ if __name__ == '__main__':
     # debug_plot_result()
     # debug_plot_result_normal()
     # debug_plot_result_normal()
-    run_post_p()
+    # run_post_p()
+    run_post_p_wt()
+    # debug_plot_result_post_p()
