@@ -251,10 +251,29 @@ def TestChanggeng(debug = False):
         with open(hiking_save_result_folder + '%s.json' % cID, 'w') as fout:
             json.dump(annots, fout, indent = 4)
 
+def debug_plot_result_normal():
+    import glob,json
+    files = glob.glob('/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0607/*.json')
+    avg_result_folder = '/home/alex/LabGit/ECG_random_walk/experiments/record_test/hiking/avg/'
+    cloader = ECGLoader(2, 1)
+    for result_file_name in files:
+        cID = os.path.split(result_file_name)[-1]
+        cID = cID.split('.')[0]
+        print 'Ploting cID:', cID
+        with open(result_file_name, 'r') as fin:
+            annots = json.load(fin)
+        # with open(avg_result_folder + '%s.json' % cID, 'r') as fin:
+            # avg_annots = json.load(fin)
+
+        
+        raw_sig = cloader.loadID(cID)
+        plot_result(raw_sig, annots)
+        # pdb.set_trace()
 
 if __name__ == '__main__':
-    testing(test_method = 'test_seed')
+    # testing(test_method = 'test_seed')
     # testing(changgengID = '56332', leadname = 'III')
     # TestChanggeng(debug = True)
     # debug_plot_result()
     # debug_plot_result_normal()
+    debug_plot_result_normal()

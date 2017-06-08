@@ -21,6 +21,9 @@ from sklearn.ensemble import RandomForestClassifier
 import matplotlib.pyplot as plt
 from QTdata.loadQTdata import QTloader 
 
+from randomwalk.changgengLoader import ECGLoader
+import randomwalk.test_api as randomwalk
+
 # Get current file path & project homepath.
 curfilepath =  os.path.realpath(__file__)
 curfolderpath = os.path.dirname(curfilepath)
@@ -122,9 +125,39 @@ def TestAllQTdata(saveresultpath,testinglist):
             print 'Testing time %f s, data time %f s.' % (time_cost, len(raw_sig) / 250.0)
 
 
+def TestChanggeng(debug = False):
+    import json
+    from randomwalk.test_api import Testing
 
-if __name__ == '__main__':
+    with open('/home/alex/LabGit/ECG_random_walk/tools/annotations/inputs/IDlist.json', 'r') as fin:
+    # with open('/home/alex/LabGit/ECG_random_walk/experiments/record_test/hiking/normal/IDlist.json', 'r') as fin:
+        IDlist = json.load(fin)
+    avg_save_result_folder = '/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0607/'
+    hiking_save_result_folder = '/home/alex/LabGit/ECG_random_walk/experiments/record_test/hiking/QRS_bias/hiking/'
+    cloader = ECGLoader(1, 1)
 
+    for cID in IDlist:
+        print 'Testing cID:', cID
+
+        raw_sig = cloader.loadID(cID)
+        model_folder = '/home/alex/LabGit/ECG_random_walk/randomwalk/data/annots0605/db2/'
+        annots = randomwalk.TestingWithModelFolder(raw_sig, 500.0, model_folder)
+        with open(avg_save_result_folder + '%s.json' % cID, 'w') as fout:
+            json.dump(annots, fout, indent = 4)
+
+        # if debug:
+            # annots = testing(changgengID = cID, test_method = 'test_seed')
+            # continue
+            
+        # annots = testing(changgengID = cID, test_method = 'normal')
+        # with open(avg_save_result_folder + '%s.json' % cID, 'w') as fout:
+            # json.dump(annots, fout, indent = 4)
+
+        # annots = testing(changgengID = cID, test_method = 'hiking')
+        # with open(hiking_save_result_folder + '%s.json' % cID, 'w') as fout:
+            # json.dump(annots, fout, indent = 4)
+
+def Test():
     # Debug
     number_of_test_record_per_round = 30
 
@@ -147,3 +180,7 @@ if __name__ == '__main__':
             number_of_test_record_per_round = number_of_test_record_per_round,
             RoundNumber = 100,
             round_start_index = 1)
+
+if __name__ == '__main__':
+    TestChanggeng()
+

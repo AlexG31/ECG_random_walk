@@ -65,6 +65,11 @@ def Denoise(raw_sig, level = 7, low = 1, high = 1):
     print len_sig
     return raw_sig
 
+def TestingWithModelFolder(raw_sig, fs, model_folder,walker_iterations = 100, walker_stepsize = 10):
+    pattern_file_name = os.path.join(model_folder, 'random_pattern.json')
+    model_list = GetModels(model_folder, pattern_file_name)
+    return Testing(raw_sig, fs, model_list, walker_iterations = walker_iterations, walker_stepsize = walker_stepsize)
+
 def Testing(raw_sig_in, fs, model_list, walker_iterations = 100, walker_stepsize = 10):
     '''Testing API.
     Input:
