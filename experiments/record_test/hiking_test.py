@@ -115,14 +115,17 @@ def hiking(walk_result):
     for ind in xrange(0, len(histogram)):
         if ind == 0:
             if histogram[ind] > histogram[ind + 1]:
-                peak_positions.append(m0 + (ind + 0.5) * bin_width)
+                # peak_positions.append(m0 + (ind + 0.5) * bin_width)
+                peak_positions.append(m0 + (ind) * bin_width)
         elif ind == len(histogram) - 1:
             if histogram[ind] > histogram[ind - 1]:
-                peak_positions.append(m0 + (ind + 0.5) * bin_width)
+                # peak_positions.append(m0 + (ind + 0.5) * bin_width)
+                peak_positions.append(m0 + (ind) * bin_width)
         else:
             if (histogram[ind] >= histogram[ind - 1] and
                 histogram[ind] >= histogram[ind + 1]):
-                peak_positions.append(m0 + (ind + 0.5) * bin_width)
+                # peak_positions.append(m0 + (ind + 0.5) * bin_width)
+                peak_positions.append(m0 + (ind) * bin_width)
             
     # 3. Voting
     # If there are multiple winners, the average is used
@@ -160,6 +163,29 @@ def hiking(walk_result):
 
     output = float(sum(candidate_list)) / len(candidate_list)
     return output
+
+def debug_plot_result():
+    import glob,json
+    files = glob.glob('/home/alex/LabGit/ECG_random_walk/experiments/record_test/hiking/*.json')
+    avg_result_folder = '/home/alex/LabGit/ECG_random_walk/experiments/record_test/hiking/avg/'
+    cloader = ECGLoader(2, 1)
+    for result_file_name in files:
+        cID = os.path.split(result_file_name)[-1]
+        cID = cID.split('.')[0]
+        print 'Ploting cID:', cID
+        with open(result_file_name, 'r') as fin:
+            annots = json.load(fin)
+        with open(avg_result_folder + '%s.json' % cID, 'r') as fin:
+            avg_annots = json.load(fin)
+
+        
+        raw_sig = cloader.loadID(cID)
+        test_tools.plot_result(raw_sig, annots)
+        # pdb.set_trace()
+
+
+if __name__ == '__main__':
+    debug_plot_result()
 
 
         
