@@ -320,8 +320,8 @@ def debug_plot_result_post_p():
         annots.extend(P_annots)
         return annots
 
-    files = glob.glob('/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0607/*.json')
-    postp_result_folder = '/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0607/post_p/'
+    files = glob.glob('/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0609/*.json')
+    postp_result_folder = '/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0609/post_p/'
     cloader = ECGLoader(2, 1)
     fig, ax = plt.subplots(1,1, figsize=(25, 6))
     for result_file_name in files:
@@ -331,10 +331,10 @@ def debug_plot_result_post_p():
         with open(result_file_name, 'r') as fin:
             annots = json.load(fin)
 
-        if os.path.exists(postp_result_folder + '%s.json' % cID) == False:
-            continue
-        with open(postp_result_folder + '%s.json' % cID, 'r') as fin:
-            postp_annots = json.load(fin)
+        # if os.path.exists(postp_result_folder + '%s.json' % cID) == False:
+            # continue
+        # with open(postp_result_folder + '%s.json' % cID, 'r') as fin:
+            # postp_annots = json.load(fin)
 
         
         raw_sig = cloader.loadID(cID)
@@ -343,8 +343,8 @@ def debug_plot_result_post_p():
         plt.plot(raw_sig)
         plotExpertLabels(ax, raw_sig, annots, label_prefix = 'Normal')
 
-        postp_annots = filter(lambda x: x[1][0] == 'P', postp_annots)
-        plotExpertLabels(ax, raw_sig, postp_annots, color_in = 'y', label_prefix = 'post_p ')
+        # postp_annots = filter(lambda x: x[1][0] == 'P', postp_annots)
+        # plotExpertLabels(ax, raw_sig, postp_annots, color_in = 'y', label_prefix = 'post_p ')
         plt.title(u'长庚 ' + cID)
         plt.xlim((750, len(raw_sig) - 750))
         
@@ -384,7 +384,7 @@ def run_post_p_wt(output_folder = '/home/alex/LabGit/ECG_random_walk/experiments
         # with open(output_folder + '%s.json' % cID, 'w') as fout:
             # json.dump(annots, fout)
         # plot_result(raw_sig, annots)
-        pdb.set_trace()
+        # pdb.set_trace()
 if __name__ == '__main__':
     # testing(test_method = 'test_seed')
     # testing(changgengID = '56332', leadname = 'III')
