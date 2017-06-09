@@ -225,7 +225,7 @@ def crop_data_for_swt(rawsig):
 
 def post_p_wt(raw_sig, annots, fs):
     '''Post-processing of P wave with wavelet transform.'''
-    import pywt, math
+    import pywt, math, copy
     annots = post_p(raw_sig, annots, fs)
     annots.sort(key = lambda x:x[0])
 
@@ -247,6 +247,54 @@ def post_p_wt(raw_sig, annots, fs):
     # coefs = pywt.swt(raw_sig, 'bior1.3', level = 7)
     coefs = pywt.swt(raw_sig, wavelet_q, level = 7)
 
+    old_annots = filter(lambda x: x[1] == 'Ponset', annots)
+    old_annots = copy.deepcopy(old_annots)
+
+    # Judge left bound
+    expand_width = 40
+    x_range_list = list()
+    x_range_start = None
+    
+    wt4_signal = coefs[-4][1]
+    for ind in xrange(0, len(annots)):
+        pos, label = annots[ind]
+        if label == 'Ponset':
+            # Fix Ponset position
+            left = pos - expand_width
+            right = pos + expand_width
+            left = max(0, left)
+            right = min(right, len(raw_sig))
+        
+            peak_index = np.argmax(coefs[-5][1][left:right]) + left
+
+            # Find closest peak in WT[-4]
+            ponset = None
+            for dist in xrange(0, expand_width):
+                pos1 = peak_index + dist
+                if pos1 < len(raw_sig) - 1:
+                    if (wt4_signal[pos1] > wt4_signal[pos1 - 1] and
+                            wt4_signal[pos1] > wt4_signal[pos1 + 1]):
+                        ponset = pos1
+                        break
+                pos0 = peak_index - dist
+                if pos0 > 0:
+                    if (wt4_signal[pos0] > wt4_signal[pos0 - 1] and
+                            wt4_signal[pos0] > wt4_signal[pos0 + 1]):
+                        ponset = pos0
+                        break
+
+            if ponset is not None:
+                annots[ind][0] = ponset
+                            
+                    
+                    
+            
+            
+        elif label == 'Poffset':
+            if x_range_start is not None:
+                x_range_list.append((x_range_start, pos + expand_width))
+            x_range_start = None
+
 
     plt.figure(1)
 
@@ -263,11 +311,25 @@ def post_p_wt(raw_sig, annots, fs):
         # print 'm1 %f, m0 %f' % (m1, m0)
         wt_signal = [(x - m0)/ (m1 - m0) for x in wt_signal]
         plt.plot(wt_signal, label = 'WT level %d' % ind)
+
+    # Plot Ponset annots
+    Ponset_annots = filter(lambda x: x[1] == 'Ponset', annots)
+    poslist = [x[0] for x in Ponset_annots]
+    
+    amplist = [raw_sig[x] for x in poslist]
+    
+    plt.plot(poslist, amplist, 'ro', markersize = 12, label = 'Ponset')
+
+    # Old Annots
+    poslist = [x[0] for x in old_annots]
+    amplist = [raw_sig[x] for x in poslist]
+    plt.plot(poslist, amplist, 'd', color='black', markersize = 14, alpha = 0.5,
+            label = 'Ponset')
     
     plt.grid(True)
-    plt.legend()
+    plt.legend(numpoints = 1)
     plt.show()
     
-    return []
+    return annots
     
 

@@ -133,7 +133,7 @@ if __name__ == '__main__':
     label_list = ['P', 'Ponset', 'Poffset',
             'Toffset',
             'Ronset', 'R', 'Roffset']
-    root_folder = 'data/annots0605/db2'
+    root_folder = 'data/annots0609/qwavelet'
     # Refresh training list
     num_training = 105
     trianing_list = list()

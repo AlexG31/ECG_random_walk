@@ -364,6 +364,7 @@ def run_post_p_wt(output_folder = '/home/alex/LabGit/ECG_random_walk/experiments
         return annots
 
     files = glob.glob('/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0607/*.json')
+    # files = glob.glob('/home/alex/LabGit/ECG_random_walk/experiments/record_test/hiking/normal/avg/*.json')
     avg_result_folder = '/home/alex/LabGit/ECG_random_walk/experiments/record_test/hiking/avg/'
     cloader = ECGLoader(2, 1)
     for result_file_name in files:
@@ -372,6 +373,7 @@ def run_post_p_wt(output_folder = '/home/alex/LabGit/ECG_random_walk/experiments
         print 'Ploting cID:', cID
         with open(result_file_name, 'r') as fin:
             annots = json.load(fin)
+            # print 'Read annots:', annots
         # with open(avg_result_folder + '%s.json' % cID, 'r') as fin:
             # avg_annots = json.load(fin)
 
