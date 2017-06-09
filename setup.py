@@ -7,5 +7,5 @@ setup(name='ECGRandomWalk',
       description='ECG Random Walk Delineator',
       author='Phil G',
       email = 'areseye@163.com',
-      packages=['randomwalk','randomwalk/feature_extractor'],
+      packages=['randomwalk','randomwalk/feature_extractor', 'randomwalk/post_p',],
      )

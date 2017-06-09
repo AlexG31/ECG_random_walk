@@ -12,6 +12,7 @@ from dpi.DPI_QRS_Detector import DPI_QRS_Detector as DPI
 from random_walker import RandomWalker
 
 
+
 curfilepath =  os.path.realpath(__file__)
 current_folderpath = os.path.dirname(curfilepath)
 
@@ -78,6 +79,20 @@ def Testing(raw_sig_in, fs, model_list, walker_iterations = 100, walker_stepsize
     Output:
         List of (pos, label) pairs.
     '''
+    from randomwalk.post_p.post_p import post_p_wt
+    import copy
+    def fix_P_annots(raw_sig_in, annots, fs):
+        raw_sig = copy.deepcopy(raw_sig_in)
+        P_annots = filter(lambda x: x[1][0] =='P', annots)
+        annots = filter(lambda x: x[1][0] !='P', annots)
+
+        if abs(fs - 500.0) > 1e-6:
+            raw_sig = scipy.signal.resample(raw_sig, int(len(raw_sig) / float(fs) * 500.0))
+
+        P_annots = post_p_wt(raw_sig, P_annots, 500.0)
+        annots.extend(P_annots)
+        return annots
+
     if fs <= 1e-6:
         raise Exception('Unexpected sampling frequency of %f.' % fs)
     raw_sig = raw_sig_in[:]
@@ -94,6 +109,10 @@ def Testing(raw_sig_in, fs, model_list, walker_iterations = 100, walker_stepsize
     # walk_results.extend(Testing_QS(raw_sig, fs_inner, r_list))
     # Change result indexes according to sampling frequency
     walk_results = [[x[0] / 250.0 * fs, x[1]] for x in walk_results]
+
+    # Post-p processing
+    walk_results = fix_P_annots(raw_sig_in, walk_results, fs)
+
     return walk_results
 
 def Testing_QS(raw_sig, fs, r_list):

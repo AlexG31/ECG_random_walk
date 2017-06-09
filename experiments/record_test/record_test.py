@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 from QTdata.loadQTdata import QTloader 
 
 from randomwalk.changgengLoader import ECGLoader
-import randomwalk.test_api as randomwalk
+import randomwalk.test_api as test_api
 
 # Get current file path & project homepath.
 curfilepath =  os.path.realpath(__file__)
@@ -132,7 +132,7 @@ def TestChanggeng(debug = False):
     with open('/home/alex/LabGit/ECG_random_walk/tools/annotations/inputs/IDlist.json', 'r') as fin:
     # with open('/home/alex/LabGit/ECG_random_walk/experiments/record_test/hiking/normal/IDlist.json', 'r') as fin:
         IDlist = json.load(fin)
-    avg_save_result_folder = '/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0609/'
+    avg_save_result_folder = '/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0609/post_p/'
     # hiking_save_result_folder = '/home/alex/LabGit/ECG_random_walk/experiments/record_test/hiking/QRS_bias/hiking/'
     cloader = ECGLoader(1, 1)
 
@@ -141,7 +141,7 @@ def TestChanggeng(debug = False):
 
         raw_sig = cloader.loadID(cID)
         model_folder = '/home/alex/LabGit/ECG_random_walk/randomwalk/data/annots0609/qwavelet/'
-        annots = randomwalk.TestingWithModelFolder(raw_sig, 500.0, model_folder)
+        annots = test_api.TestingWithModelFolder(raw_sig, 500.0, model_folder)
         with open(avg_save_result_folder + '%s.json' % cID, 'w') as fout:
             json.dump(annots, fout, indent = 4)
 

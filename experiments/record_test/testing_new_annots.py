@@ -313,10 +313,12 @@ def run_post_p(output_folder = '/home/alex/LabGit/ECG_random_walk/experiments/re
 def debug_plot_result_post_p():
     import glob,json
     from mcmc.post_p import post_p_mcmc
+    from mcmc.post_p import post_p_wt
     def fix_P_annots(raw_sig, annots):
         P_annots = filter(lambda x: x[1][0] =='P', annots)
         annots = filter(lambda x: x[1][0] !='P', annots)
-        P_annots = post_p_mcmc(raw_sig, P_annots, 500.0)
+        # P_annots = post_p_mcmc(raw_sig, P_annots, 500.0)
+        P_annots = post_p_wt(raw_sig, P_annots, 500.0)
         annots.extend(P_annots)
         return annots
 
@@ -343,8 +345,9 @@ def debug_plot_result_post_p():
         plt.plot(raw_sig)
         plotExpertLabels(ax, raw_sig, annots, label_prefix = 'Normal')
 
-        # postp_annots = filter(lambda x: x[1][0] == 'P', postp_annots)
-        # plotExpertLabels(ax, raw_sig, postp_annots, color_in = 'y', label_prefix = 'post_p ')
+        postp_annots = fix_P_annots(raw_sig, annots)
+        postp_annots = filter(lambda x: x[1][0] == 'P', postp_annots)
+        plotExpertLabels(ax, raw_sig, postp_annots, color_in = 'y', label_prefix = 'post_p ')
         plt.title(u'长庚 ' + cID)
         plt.xlim((750, len(raw_sig) - 750))
         
@@ -393,5 +396,5 @@ if __name__ == '__main__':
     # debug_plot_result_normal()
     # debug_plot_result_normal()
     # run_post_p()
-    run_post_p_wt()
-    # debug_plot_result_post_p()
+    # run_post_p_wt()
+    debug_plot_result_post_p()

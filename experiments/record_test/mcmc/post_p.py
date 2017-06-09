@@ -249,14 +249,14 @@ def post_p_wt(raw_sig, annots, fs):
 
     # old_annots = filter(lambda x: x[1] == 'Ponset', annots)
     # old_annots = copy.deepcopy(old_annots)
-    old_annots = copy.deepcopy(annots)
+    # old_annots = copy.deepcopy(annots)
 
     # Judge left bound
     expand_width = 40
-    x_range_list = list()
-    x_range_start = None
     
     rule20_list = list()
+    wt4_signal = coefs[-4][1]
+    wt3_signal = coefs[-3][1]
     for ind in xrange(0, len(annots)):
         pos, label = annots[ind]
         if label == 'Ponset':
@@ -298,45 +298,6 @@ def post_p_wt(raw_sig, annots, fs):
             # peak_index = np.argmin(np.abs(coefs[-4][1][left:right])) + left
             peak_index = int(np.argmax(coefs[-5][1][left:right]) + left)
 
-            # Find closest peak in WT[-3]
-            poffset = None
-            for dist in xrange(0, expand_width):
-                # pos1 = peak_index + dist
-                # if pos1 < len(raw_sig) - 1:
-                    # if (wt4_signal[pos1] > wt4_signal[pos1 - 1] and
-                            # wt4_signal[pos1] > wt4_signal[pos1 + 1]):
-                        # ponset = pos1
-                        # break
-                pos0 = peak_index - dist
-                if pos0 > 0:
-                    if (wt3_signal[pos0] > wt3_signal[pos0 - 1] and
-                            wt3_signal[pos0] > wt3_signal[pos0 + 1]):
-                        poffset = pos0
-                        break
-
-            if poffset is not None:
-                poffset3_list.append(poffset)
-            else:
-                poffset3_list.append(annots[ind][0])
-
-            poffset = None
-            for dist in xrange(0, expand_width):
-                # pos1 = peak_index + dist
-                # if pos1 < len(raw_sig) - 1:
-                    # if (wt4_signal[pos1] > wt4_signal[pos1 - 1] and
-                            # wt4_signal[pos1] > wt4_signal[pos1 + 1]):
-                        # ponset = pos1
-                        # break
-                pos0 = peak_index - dist
-                if pos0 > 0:
-                    if (wt4_signal[pos0 + 1] * wt4_signal[pos0 - 1] <= 0):
-                        poffset = pos0
-                        break
-            if poffset is not None:
-                p4list.append(poffset)
-            else:
-                p4list.append(annots[ind][0])
-
             # 20% rule
             ponset = None
             for prev_ind in xrange(ind, -1, -1):
@@ -344,10 +305,10 @@ def post_p_wt(raw_sig, annots, fs):
                     ponset = annots[prev_ind][0]
                     break
             if ponset is None:
-                rule20_list.append(annots[ind][0])
+                continue
             else:
                 if len(raw_sig[ponset:peak_index]) == 0:
-                    rule20_list.append(annots[ind][0])
+                    continue
                 else:
                     P_peak_pos = ponset + np.argmax(raw_sig[ponset:peak_index])
                     m1 = raw_sig[P_peak_pos]
@@ -355,10 +316,7 @@ def post_p_wt(raw_sig, annots, fs):
 
                     thres = m0 + (m1 - m0) * 0.15
                     poffset = np.argmin(np.abs(np.array(raw_sig[P_peak_pos:peak_index]) - thres)) + P_peak_pos 
-                    rule20_list.append(poffset)
-
-                
-            annots[ind][0] = peak_index
+                    annots[ind][0] = poffset
 
 
     return annots
