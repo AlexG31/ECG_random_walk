@@ -322,14 +322,13 @@ def debug_plot_result_post_p():
         annots.extend(P_annots)
         return annots
 
-    files = glob.glob('/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0609/post_p/*.json')
+    files = glob.glob('/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0609/db2_post_p/*.json')
     postp_result_folder = '/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0609/post_p/'
     cloader = ECGLoader(2, 1)
     fig, ax = plt.subplots(1,1, figsize=(25, 6))
     for result_file_name in files:
         cID = os.path.split(result_file_name)[-1]
         cID = cID.split('.')[0]
-        print 'Ploting cID:', cID
         with open(result_file_name, 'r') as fin:
             annots = json.load(fin)
 
@@ -339,7 +338,14 @@ def debug_plot_result_post_p():
             # postp_annots = json.load(fin)
 
         
+        cID = '49614'
+        cID = '49643'
+        print 'Ploting cID:', cID
+
         raw_sig = cloader.loadID(cID)
+        import randomwalk.test_api as test_api
+        model_folder = '/home/alex/LabGit/ECG_random_walk/randomwalk/data/annots0609/qwavelet/'
+        annots = test_api.TestingWithModelFolder(raw_sig, 500.0, model_folder)
 
         ax.cla()
         plt.plot(raw_sig)

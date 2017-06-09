@@ -1,5 +1,7 @@
 *.json
 *.dat
+*.png
+*.tar
 
 # Random Walk
 training/data/*
