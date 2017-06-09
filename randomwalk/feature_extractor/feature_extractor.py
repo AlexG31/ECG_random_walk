@@ -61,17 +61,17 @@ class ECGfeatures:
 
         # Quad spline wavelet
     
-        a0 = 0.3133
-        a1 = 2.0 * math.sqrt(2.0 * math.pi)
-        dec_lo = (a0, a0 * 3, a0 * 3, a0)
-        dec_hi = (0, a1, -a1, 0)
-        # rec_lo = (0, a0, a0 * 3, a0 * 3, a0)
-        # rec_hi = (0, 0, -a1, a1, 0)
-        rec_lo = (0, 0, 0, 0)
-        rec_hi = (0, 0, 0, 0)
+        # a0 = 0.3133
+        # a1 = 2.0 * math.sqrt(2.0 * math.pi)
+        # dec_lo = (a0, a0 * 3, a0 * 3, a0)
+        # dec_hi = (0, a1, -a1, 0)
+        # # rec_lo = (0, a0, a0 * 3, a0 * 3, a0)
+        # # rec_hi = (0, 0, -a1, a1, 0)
+        # rec_lo = (0, 0, 0, 0)
+        # rec_hi = (0, 0, 0, 0)
 
-        filter_bank = [dec_lo, dec_hi, rec_lo, rec_hi]
-        wavelet = pywt.Wavelet('q_wave', filter_bank = filter_bank)
+        # filter_bank = [dec_lo, dec_hi, rec_lo, rec_hi]
+        # wavelet = pywt.Wavelet('q_wave', filter_bank = filter_bank)
 
         coeflist = pywt.swt(self.rawsig, wavelet, wt_level)
         cAlist, cDlist = zip(*coeflist)

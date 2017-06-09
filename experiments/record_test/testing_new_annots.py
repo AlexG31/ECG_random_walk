@@ -322,7 +322,7 @@ def debug_plot_result_post_p():
         annots.extend(P_annots)
         return annots
 
-    files = glob.glob('/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0609/*.json')
+    files = glob.glob('/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0609/post_p/*.json')
     postp_result_folder = '/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0609/post_p/'
     cloader = ECGLoader(2, 1)
     fig, ax = plt.subplots(1,1, figsize=(25, 6))
@@ -345,9 +345,9 @@ def debug_plot_result_post_p():
         plt.plot(raw_sig)
         plotExpertLabels(ax, raw_sig, annots, label_prefix = 'Normal')
 
-        postp_annots = fix_P_annots(raw_sig, annots)
-        postp_annots = filter(lambda x: x[1][0] == 'P', postp_annots)
-        plotExpertLabels(ax, raw_sig, postp_annots, color_in = 'y', label_prefix = 'post_p ')
+        # postp_annots = fix_P_annots(raw_sig, annots)
+        # postp_annots = filter(lambda x: x[1][0] == 'P', postp_annots)
+        # plotExpertLabels(ax, raw_sig, postp_annots, color_in = 'y', label_prefix = 'post_p ')
         plt.title(u'长庚 ' + cID)
         plt.xlim((750, len(raw_sig) - 750))
         
