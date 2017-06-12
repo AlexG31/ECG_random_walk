@@ -188,4 +188,4 @@ def randomTraining(root_folder = 'models/round1', num_training = 75,random_patte
 
 if __name__ == '__main__':
     for rnd in xrange(1, 31):
-        randomTraining('models/round%d' % rnd)
+        randomTraining('hiking/round%d' % rnd)

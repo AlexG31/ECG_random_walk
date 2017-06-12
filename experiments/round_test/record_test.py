@@ -105,8 +105,10 @@ def TestAllQTdata(saveresultpath, testinglist):
     from randomwalk.test_api import GetModels
     from randomwalk.test_api import Testing
     # pattern_filename = os.path.join(os.path.dirname(saveresultpath), 'randrel.json')
-    pattern_filename = '/home/alex/LabGit/ECG_random_walk/randomwalk/data/Lw3Np4000/random_pattern.json'
-    model_folder = '/home/alex/LabGit/ECG_random_walk/randomwalk/data/Lw3Np4000'
+    model_folder = '/home/alex/LabGit/ECG_random_walk/randomwalk/data/annots0609/qwavelet'
+    # pattern_filename = '/home/alex/LabGit/ECG_random_walk/randomwalk/data/Lw3Np4000/random_pattern.json'
+    pattern_filename = os.path.join(model_folder, 'random_pattern.json')
+    # model_folder = '/home/alex/LabGit/ECG_random_walk/randomwalk/data/Lw3Np4000'
     model_list = GetModels(model_folder, pattern_filename)
 
     for record_name in testinglist:
@@ -122,7 +124,9 @@ def TestAllQTdata(saveresultpath, testinglist):
             print 'Testing time %f s, data time %f s.' % (time_cost, len(raw_sig) / 250.0)
 
 
-def RoundTesting(saveresultpath, testinglist, model_folder = '/home/alex/LabGit/ECG_random_walk/randomwalk/data/Lw3Np4000', pattern_filename = '/home/alex/LabGit/ECG_random_walk/randomwalk/data/Lw3Np4000/random_pattern.json'):
+def RoundTesting(saveresultpath, testinglist,
+        model_folder = '/home/alex/LabGit/ECG_random_walk/randomwalk/data/Lw3Np4000', 
+        pattern_filename = '/home/alex/LabGit/ECG_random_walk/randomwalk/data/Lw3Np4000/random_pattern.json'):
     '''Test all records in testinglist, training on remaining records in QTdb.'''
     qt_loader = QTloader()
     QTreclist = qt_loader.getQTrecnamelist()
@@ -157,8 +161,8 @@ if __name__ == '__main__':
     # Debug
     number_of_test_record_per_round = 30
 
-    saveresultpath = os.path.join(curfolderpath, 'round1')
-    random_relation_file_path = os.path.join(curfolderpath, 'round1')
+    saveresultpath = os.path.join(curfolderpath, 'hiking')
+    random_relation_file_path = os.path.join(curfolderpath, 'hiking')
 
     # create result folder if not exist
     if os.path.exists(saveresultpath) == True:
@@ -174,5 +178,5 @@ if __name__ == '__main__':
 
     Round_Test(saveresultpath,
             number_of_test_record_per_round = number_of_test_record_per_round,
-            RoundNumber = 100,
+            RoundNumber = 30,
             round_start_index = 1)

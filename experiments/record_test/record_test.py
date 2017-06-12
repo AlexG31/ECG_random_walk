@@ -132,7 +132,7 @@ def TestChanggeng(debug = False):
     with open('/home/alex/LabGit/ECG_random_walk/tools/annotations/inputs/IDlist.json', 'r') as fin:
     # with open('/home/alex/LabGit/ECG_random_walk/experiments/record_test/hiking/normal/IDlist.json', 'r') as fin:
         IDlist = json.load(fin)
-    avg_save_result_folder = '/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0609/db2_post_p/'
+    avg_save_result_folder = '/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0609/hiking/'
     # hiking_save_result_folder = '/home/alex/LabGit/ECG_random_walk/experiments/record_test/hiking/QRS_bias/hiking/'
     cloader = ECGLoader(1, 1)
 
@@ -140,7 +140,7 @@ def TestChanggeng(debug = False):
         print 'Testing cID:', cID
 
         raw_sig = cloader.loadID(cID)
-        model_folder = '/home/alex/LabGit/ECG_random_walk/randomwalk/data/annots0605/db2/'
+        model_folder = '/home/alex/LabGit/ECG_random_walk/randomwalk/data/annots0609/qwavelet/'
         annots = test_api.TestingWithModelFolder(raw_sig, 500.0, model_folder)
         with open(avg_save_result_folder + '%s.json' % cID, 'w') as fout:
             json.dump(annots, fout, indent = 4)

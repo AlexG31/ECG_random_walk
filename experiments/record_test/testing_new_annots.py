@@ -322,7 +322,8 @@ def debug_plot_result_post_p():
         annots.extend(P_annots)
         return annots
 
-    files = glob.glob('/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0609/db2_post_p/*.json')
+    # files = glob.glob('/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0609/db2_post_p/*.json')
+    files = glob.glob('/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0609/hiking/*.json')
     postp_result_folder = '/home/alex/LabGit/ECG_random_walk/experiments/record_test/result0609/post_p/'
     cloader = ECGLoader(2, 1)
     fig, ax = plt.subplots(1,1, figsize=(25, 6))
@@ -339,7 +340,7 @@ def debug_plot_result_post_p():
 
         
         cID = '49614'
-        cID = '49643'
+        # cID = '49643'
         print 'Ploting cID:', cID
 
         raw_sig = cloader.loadID(cID)

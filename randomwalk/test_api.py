@@ -10,6 +10,7 @@ import pdb
 
 from dpi.DPI_QRS_Detector import DPI_QRS_Detector as DPI
 from random_walker import RandomWalker
+from hiking_test import hiking
 
 
 
@@ -351,9 +352,18 @@ def Testing_random_walk_RR_batch(raw_sig, fs, qrs_locations, model_list, iterati
         path_list, scores_list = walker_model.runPreparedTesting(feature_extractor)
 
         predict_position_list = list()
-        for path in path_list:
+        for path,scores in zip(path_list, scores_list):
             # Tnew_list.append(len(set(path)))
-            predict_position = int(np.mean(path[len(path) / 2:]) / 250.0 * fs)
+            # predict_position = int(np.mean(path[len(path) / 2:]) / 250.0 * fs)
+            
+            # Decouple scores
+            confidence_list = list()
+            while len(scores) >= 2:
+                confidence_list.append(scores[1])
+                scores = scores[0]
+            confidence_list = confidence_list[::-1]
+            
+            predict_position = hiking(zip(path, confidence_list))
 
             # For return value of this function
             predict_position_list.append(predict_position)
