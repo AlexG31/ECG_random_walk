@@ -24,6 +24,7 @@ def post_p(raw_sig, annots, fs):
     other_annots = filter(lambda x: x[1][0] != 'P' and x[1] != 'Ronset', annots)
     annots = filter(lambda x: x[1][0] == 'P' or x[1] == 'Ronset', annots)
     annots.sort(key = lambda x:x, cmp = compare_annot)
+    annots = [[int(x[0]),x[1]] for x in annots]
     
     for ind in xrange(1, len(annots) - 1):
         pos, label = annots[ind]
