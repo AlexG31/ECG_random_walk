@@ -173,9 +173,21 @@ def randomTraining(root_folder = 'models/round1', num_training = 75,random_patte
     # Save training list
     with open(os.path.join(root_folder, 'training_list.json'), 'w') as fout:
         json.dump(training_list, fout, indent = 4)
+
+    # Train Models with multiprocessing
+    from multiprocessing import Process
+    process_list = list()
     for target_label in label_list:
         model_file_name = os.path.join(root_folder, '%s.mdl' % target_label)
-        TrainingModels(target_label, model_file_name, training_list, random_pattern_path = random_pattern_path)
+        # TrainingModels(target_label, model_file_name, training_list, random_pattern_path = random_pattern_path)
+        p1 = Process(target = TrainingModels, args = (target_label, model_file_name, training_list, random_pattern_path))
+        process_list.append(p1)
+        p1.start()
+
+    for process_bit in process_list:
+        process_bit.join()
+    
+    
 
     # Testing
     testing_list = list(set(qt.getreclist()) - set(training_list))
@@ -188,4 +200,4 @@ def randomTraining(root_folder = 'models/round1', num_training = 75,random_patte
 
 if __name__ == '__main__':
     for rnd in xrange(1, 31):
-        randomTraining('hiking/round%d' % rnd)
+        randomTraining('hiking_full/round%d' % rnd)

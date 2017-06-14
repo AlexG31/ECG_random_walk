@@ -8,7 +8,7 @@ import joblib
 import numpy as np
 import numpy.random as random
 import random as pyrandom
-from feature_extractor.feature_extractor import ECGfeatures
+from feature_extractor.full_wt_feature_extractor import ECGfeatures
 from sklearn.ensemble import RandomForestRegressor
 
 class RandomWalker(object):
@@ -65,7 +65,7 @@ class RandomWalker(object):
         conf = dict(
                 fs = 250,
                 winlen_ratio_to_fs = 3,
-                WT_LEVEL = 6
+                WT_LEVEL = 8
                 )
 
         if self.random_pattern_file_name is not None:

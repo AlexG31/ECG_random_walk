@@ -145,14 +145,35 @@ def RoundTesting(saveresultpath, testinglist,
     for record_name in testinglist:
         print 'testing %s' % record_name
         sig = qt_loader.load(record_name)
-        raw_sig = sig['sig']
+
+        # Limit x-range
+        expert_annots = qt_loader.getExpert(record_name)
+        annot_poslist = [x[0] for x in expert_annots]
+        x_range = (min(annot_poslist), max(annot_poslist))
+        x_range[0] = max(0, x_range[0] - 750)
+        x_range[1] = min(len(sig['sig']), x_range[1] + 750)
         
         start_time = time.time()
+        lead_results = list()
+
+        # Lead1 ECG
+        raw_sig = sig['sig']
+        raw_sig = raw_sig[x_range[0]:x_range[1]]
         results = Testing(raw_sig, 250.0, model_list, walker_iterations = 100)
+        results = [[results[0] + x_range[0], results[1]] for x in results]
+        lead_results.append(results)
+
+        # Lead2 ECG
+        raw_sig = sig['sig2']
+        raw_sig = raw_sig[x_range[0]:x_range[1]]
+        results = Testing(raw_sig, 250.0, model_list, walker_iterations = 100)
+        results = [[results[0] + x_range[0], results[1]] for x in results]
+        lead_results.append(results)
+
         time_cost = time.time() - start_time
 
         with open(os.path.join(saveresultpath, '%s.json' % record_name), 'w') as fout:
-            json.dump(results, fout, indent = 4)
+            json.dump(lead_results, fout, indent = 4)
             print 'Testing time %f s, data time %f s.' % (time_cost, len(raw_sig) / 250.0)
 
 

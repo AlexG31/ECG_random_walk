@@ -117,12 +117,12 @@ def RefreshRswtPairs(configure, result_file_name):
 
     # Relation list per level.(total:wt_level + 1)
     RelList = []
-    total_pair_number = configure['WTrandselfeaturenumber_apprx']
+    half_fixed_pair_number = configure['WTrandselfeaturenumber_apprx']
 
     totally_random_pair_number = configure['totally_random_pair_number']
 
     # Why divide by 2? The pairs' both diff&abs are added to feature vector,
-    pair_number_per_layer = total_pair_number / (wt_level - 1.0) / 2.0
+    pair_number_per_layer = half_fixed_pair_number / (wt_level - 1.0) / 2.0
     pair_number_per_layer = int(pair_number_per_layer)
 
     totally_random_pair_number_per_layer = int(
