@@ -32,6 +32,7 @@ class ECGfeatures:
                 self,
                 rawsig,
                 configuration_info,
+                target_label,
                 wavelet = 'db2',
             ):
         '''
@@ -53,6 +54,13 @@ class ECGfeatures:
         self.signal_in = rawsig
         self.rawsig = rawsig[:]
         self.config = configuration_info
+        self.target_label = target_label
+        
+        pca_model_path = os.path.join('/home/alex/LabGit/ECG_random_walk/experiments/pca/feature_models', '%s.mdl' % target_label)
+        import joblib
+        with open(pca_model_path, 'rb') as fin:
+            self.pca = joblib.load(fin)
+
 
         self.random_relation_path_ = self.config['random_pattern_path']
         self.fixed_window_length = self.config['fs'] * self.config['winlen_ratio_to_fs']
@@ -205,6 +213,8 @@ class ECGfeatures:
             fv = [abs(signal[x[0]] - signal[x[1]]) for x in pair_list]
             features.extend(fv)
         
+        # Do PCA
+        features = self.pca.transform(features)
         return features
 
 

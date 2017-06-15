@@ -149,7 +149,7 @@ def RoundTesting(saveresultpath, testinglist,
         # Limit x-range
         expert_annots = qt_loader.getExpert(record_name)
         annot_poslist = [x[0] for x in expert_annots]
-        x_range = (min(annot_poslist), max(annot_poslist))
+        x_range = [min(annot_poslist), max(annot_poslist)]
         x_range[0] = max(0, x_range[0] - 750)
         x_range[1] = min(len(sig['sig']), x_range[1] + 750)
         
@@ -160,14 +160,14 @@ def RoundTesting(saveresultpath, testinglist,
         raw_sig = sig['sig']
         raw_sig = raw_sig[x_range[0]:x_range[1]]
         results = Testing(raw_sig, 250.0, model_list, walker_iterations = 100)
-        results = [[results[0] + x_range[0], results[1]] for x in results]
+        results = [[x[0] + x_range[0], x[1]] for x in results]
         lead_results.append(results)
 
         # Lead2 ECG
         raw_sig = sig['sig2']
         raw_sig = raw_sig[x_range[0]:x_range[1]]
         results = Testing(raw_sig, 250.0, model_list, walker_iterations = 100)
-        results = [[results[0] + x_range[0], results[1]] for x in results]
+        results = [[x[0] + x_range[0], x[1]] for x in results]
         lead_results.append(results)
 
         time_cost = time.time() - start_time

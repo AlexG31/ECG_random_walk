@@ -20,6 +20,7 @@ class RandomWalker(object):
             random_forest_config = dict(),
             random_pattern_file_name = None):
         '''This class only focus on a single label.'''
+        print 'Warning: gaussian_training_sampling in training process should depend on sampling frequency.'
         self.target_label = target_label
         self.regressor = None
         self.training_data = list()
@@ -78,7 +79,7 @@ class RandomWalker(object):
         training_indexes = self.gaussian_training_sampling(annot_pos_list)
 
         configuration_info = self.get_configuration()
-        feature_extractor = ECGfeatures(raw_sig, configuration_info)
+        feature_extractor = ECGfeatures(raw_sig, configuration_info, self.target_label)
 
         len_annotations = len(annot_pos_list)
         for pos in training_indexes:
@@ -197,7 +198,7 @@ class RandomWalker(object):
         if len(raw_signal) == 0:
             raise Exception('Empty testing signal!')
         configuration_info = self.get_configuration()
-        feature_extractor = ECGfeatures(raw_signal, configuration_info)
+        feature_extractor = ECGfeatures(raw_signal, configuration_info, self.target_label)
         return feature_extractor
 
     def testing_walk_extractor(self, feature_extractor,

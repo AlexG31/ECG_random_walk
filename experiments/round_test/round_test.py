@@ -199,5 +199,6 @@ def randomTraining(root_folder = 'models/round1', num_training = 75,random_patte
 
 
 if __name__ == '__main__':
+    random_pattern_path = 'hiking_full/random_pattern.json'
     for rnd in xrange(1, 31):
-        randomTraining('hiking_full/round%d' % rnd)
+        randomTraining('hiking_full/round%d' % rnd, random_pattern_path = random_pattern_path)
