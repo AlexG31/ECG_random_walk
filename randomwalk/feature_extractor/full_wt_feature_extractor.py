@@ -56,10 +56,10 @@ class ECGfeatures:
         self.config = configuration_info
         self.target_label = target_label
         
-        pca_model_path = os.path.join('/home/alex/LabGit/ECG_random_walk/experiments/pca/feature_models', '%s.mdl' % target_label)
-        import joblib
-        with open(pca_model_path, 'rb') as fin:
-            self.pca = joblib.load(fin)
+        # pca_model_path = os.path.join('/home/alex/LabGit/ECG_random_walk/experiments/pca/feature_models', '%s.mdl' % target_label)
+        # import joblib
+        # with open(pca_model_path, 'rb') as fin:
+            # self.pca = joblib.load(fin)
 
 
         self.random_relation_path_ = self.config['random_pattern_path']
@@ -214,7 +214,9 @@ class ECGfeatures:
             features.extend(fv)
         
         # Do PCA
-        features = self.pca.transform(features)
+        # features = np.array(features).reshape(1, -1)
+        # features = self.pca.transform(features)
+        # features = np.squeeze(features).tolist()
         return features
 
 

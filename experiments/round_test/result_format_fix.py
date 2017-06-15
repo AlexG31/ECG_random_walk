@@ -121,6 +121,6 @@ def post_p_processing(result_input_folder, output_folder):
 
 if __name__ == '__main__':
     # Convert round result for evaluation
-    round_result_folder = os.path.join(curfolderpath, 'hiking_full')
+    round_result_folder = os.path.join(curfolderpath, 'pca_hiking2lead')
     # fixformat(round_result_folder, round_result_folder)
     post_p_processing(round_result_folder, round_result_folder)

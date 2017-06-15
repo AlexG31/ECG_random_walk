@@ -501,11 +501,11 @@ if __name__ == '__main__':
     # Set folder path.
     prediction_result_folder = os.path.join(
             curfolderpath,
-            'hiking_full',
+            'pca_hiking2lead',
             'post_p_results')
     evaluation_result_path = os.path.join(curfolderpath,
             'eval_output')
-    total_round_number = 30
+    total_round_number = 1
     result_filename_pattern = '*.json'
 
     # Labels to extract statistics from.

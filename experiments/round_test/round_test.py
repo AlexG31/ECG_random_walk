@@ -108,11 +108,12 @@ def TrainingModels(target_label, model_file_name, training_list, random_pattern_
             random_pattern_file_name = random_pattern_path)
 
     start_time = time.time()
-    for record_name in training_list:
+    for record_name in training_list[1:10]:
         print 'Collecting features from record %s.' % record_name
         sig = qt.load(record_name)
         walker.collect_training_data(sig['sig'], qt.getExpert(record_name))
-    print 'random forest start training(%s)...' % target_label
+    print 'Random forest start training(%s)...' % target_label
+    print 'Training matrix shape:(%d, %d)' %  (len(walker.training_data), len(walker.training_data[0]))
     walker.training()
     print 'trianing used %.3f seconds' % (time.time() - start_time)
 
@@ -199,6 +200,6 @@ def randomTraining(root_folder = 'models/round1', num_training = 75,random_patte
 
 
 if __name__ == '__main__':
-    random_pattern_path = 'hiking_full/random_pattern.json'
+    random_pattern_path = 'pca_hiking2lead/random_pattern.json'
     for rnd in xrange(1, 31):
-        randomTraining('hiking_full/round%d' % rnd, random_pattern_path = random_pattern_path)
+        randomTraining('pca_hiking2lead/round%d' % rnd, random_pattern_path = random_pattern_path)
