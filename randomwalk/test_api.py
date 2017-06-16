@@ -631,7 +631,6 @@ def Testing_random_walk_RR_batch(raw_sig, fs, qrs_locations, model_list, iterati
     return testing_results
 
 
-
 def GetModels(model_folder, pattern_file_name):
     '''Returns model dict.'''
     # label_list = ['P', 'Ponset', 'Poffset',
@@ -649,13 +648,16 @@ def GetModels(model_folder, pattern_file_name):
     # Get model dict
     models = list()
     for target_label, bias in zip(label_list, bias_list):
+        print 'model_folder:', model_folder
+        print 'target_label:', target_label
         model_file_name = os.path.join(model_folder, target_label + '.mdl')
+        if os.path.exists(model_file_name) == False:
+            continue
         walker_model = RandomWalker(target_label = target_label,
                 random_pattern_file_name = pattern_file_name)
         walker_model.load_model(model_file_name)
         models.append((walker_model, bias, target_label))
     return models
-
 
 
 def Test1():
