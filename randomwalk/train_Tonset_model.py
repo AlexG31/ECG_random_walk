@@ -139,7 +139,7 @@ def TrainingModels(target_label, model_file_name, training_list):
 
 
 if __name__ == '__main__':
-    root_folder = 'data/annots0609/qwavelet/'
+    root_folder = 'data/annots0609/hiking_postp/'
     # Refresh training list
     num_training = 105
     trianing_list = list()
