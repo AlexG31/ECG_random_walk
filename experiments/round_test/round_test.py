@@ -108,7 +108,7 @@ def TrainingModels(target_label, model_file_name, training_list, random_pattern_
             random_pattern_file_name = random_pattern_path)
 
     start_time = time.time()
-    for record_name in training_list[1:10]:
+    for record_name in training_list:
         print 'Collecting features from record %s.' % record_name
         sig = qt.load(record_name)
         walker.collect_training_data(sig['sig'], qt.getExpert(record_name))

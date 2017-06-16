@@ -505,7 +505,7 @@ if __name__ == '__main__':
             'post_p_results')
     evaluation_result_path = os.path.join(curfolderpath,
             'eval_output')
-    total_round_number = 1
+    total_round_number = 25
     result_filename_pattern = '*.json'
 
     # Labels to extract statistics from.
