@@ -30,9 +30,9 @@ class RandomWalker(object):
         self.random_pattern_file_name = random_pattern_file_name
 
         # Load PCA model
-        pca_model_path = os.path.join('/home/alex/LabGit/ECG_random_walk/experiments/pca/feature_models', '%s.mdl' % target_label)
-        with open(pca_model_path, 'rb') as fin:
-            self.pca = joblib.load(fin)
+        # pca_model_path = os.path.join('/home/alex/LabGit/ECG_random_walk/experiments/pca/feature_models', '%s.mdl' % target_label)
+        # with open(pca_model_path, 'rb') as fin:
+            # self.pca = joblib.load(fin)
 
         # For batch testing.
         self.position_bucket = list()
@@ -121,10 +121,10 @@ class RandomWalker(object):
                 )
         X, y = zip(*self.training_data)
         # PCA transform matrix X
-        if len(X) == 1:
-            X = np.array(X).reshape(1, -1)
-        X = self.pca.transform(X)
-        X = np.squeeze(X).tolist()
+        # if len(X) == 1:
+            # X = np.array(X).reshape(1, -1)
+        # X = self.pca.transform(X)
+        # X = np.squeeze(X).tolist()
         self.regressor.fit(X, y)
 
     def do_training_on_qt(self, record_name = 'sel103'):
@@ -362,13 +362,13 @@ class RandomWalker(object):
                 feature_mat.append(feature_vector)
             if len(feature_mat) > 0:
                 # PCA transform
-                if len(feature_mat) == 1:
-                    feature_mat = np.array(feature_mat).reshape(1, -1)
-                feature_mat = self.pca.transform(feature_mat)
-                feature_mat = np.squeeze(feature_mat).tolist()
+                # if len(feature_mat) == 1:
+                    # feature_mat = np.array(feature_mat).reshape(1, -1)
+                # feature_mat = self.pca.transform(feature_mat)
+                # feature_mat = np.squeeze(feature_mat).tolist()
                 # Start random forest testing
-                if isinstance(feature_mat[0], list) == False:
-                    feature_mat = np.array(feature_mat).reshape(1, -1)
+                # if isinstance(feature_mat[0], list) == False:
+                    # feature_mat = np.array(feature_mat).reshape(1, -1)
                 tested_scores = self.regressor.predict(feature_mat)
                 test_result_info = zip(prepare_test_info, tested_scores)
                 for test_info_element, tested_score in test_result_info:

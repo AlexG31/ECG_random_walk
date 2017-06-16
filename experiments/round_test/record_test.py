@@ -135,8 +135,8 @@ def RoundTesting(saveresultpath, testinglist,
 
     
     # Testing
-    from test_api import GetModels
-    from test_api import Testing
+    from randomwalk.test_api import GetModels
+    from randomwalk.test_api import Testing
     # pattern_filename = os.path.join(os.path.dirname(saveresultpath), 'randrel.json')
     
     
