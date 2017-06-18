@@ -601,32 +601,33 @@ def Testing_random_walk_RR_batch(raw_sig, fs, qrs_locations, model_list, iterati
 
         # Testing Tonset 
         model_label = 'Tonset'
-        seed_positions_dict[model_label] = list()
-        confined_ranges_dict[model_label] = list()
+        if model_label in model_dict:
+            seed_positions_dict[model_label] = list()
+            confined_ranges_dict[model_label] = list()
 
-        for qrs_index, current_T in zip(xrange(batch_qrs_index, min(len(qrs_locations), batch_qrs_index + batch_size)), batch_T_list):
-            seed_position = None
-            confined_range = None
+            for qrs_index, current_T in zip(xrange(batch_qrs_index, min(len(qrs_locations), batch_qrs_index + batch_size)), batch_T_list):
+                seed_position = None
+                confined_range = None
 
-            R_pos = qrs_locations[qrs_index]
-            R_pos = R_pos * 250.0 / fs
-            # Boundaries 
-            left_QRS_bound = 0
-            right_QRS_bound = len(raw_sig)
-            if qrs_index > 0:
-                left_QRS_bound = qrs_locations[qrs_index - 1]
-            if qrs_index + 1 < len(qrs_locations):
-                right_QRS_bound = qrs_locations[qrs_index + 1]
+                R_pos = qrs_locations[qrs_index]
+                R_pos = R_pos * 250.0 / fs
+                # Boundaries 
+                left_QRS_bound = 0
+                right_QRS_bound = len(raw_sig)
+                if qrs_index > 0:
+                    left_QRS_bound = qrs_locations[qrs_index - 1]
+                if qrs_index + 1 < len(qrs_locations):
+                    right_QRS_bound = qrs_locations[qrs_index + 1]
+                walker_model, bias = model_dict[model_label]
+                bias = int(float(fs) * bias)
+
+                confined_range = [R_pos, current_T]
+                confined_ranges_dict[model_label].append(confined_range)
+                seed_position = bias + R_pos
+                seed_positions_dict[model_label].append(seed_position)
+            # Start testing
             walker_model, bias = model_dict[model_label]
-            bias = int(float(fs) * bias)
-
-            confined_range = [R_pos, current_T]
-            confined_ranges_dict[model_label].append(confined_range)
-            seed_position = bias + R_pos
-            seed_positions_dict[model_label].append(seed_position)
-        # Start testing
-        walker_model, bias = model_dict[model_label]
-        batch_Tonset_list = RunWalkerModel(walker_model, seed_positions_dict[model_label], confined_ranges_dict[model_label])
+            batch_Tonset_list = RunWalkerModel(walker_model, seed_positions_dict[model_label], confined_ranges_dict[model_label])
 
         # Testing Toffset
         model_label = 'Toffset'

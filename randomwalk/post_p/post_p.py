@@ -36,6 +36,8 @@ def post_p(raw_sig, annots, fs):
             poffset = int(annots[ind + 1][0])
             
 
+            if len(raw_sig[ponset:poffset + 1]) == 0:
+                continue
             if np.argmax(raw_sig[ponset:poffset + 1]) + ponset != pos:
                 pos = int(np.argmax(raw_sig[ponset:poffset + 1]) + ponset)
             pos = int(pos)
